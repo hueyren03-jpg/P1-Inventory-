@@ -1,0 +1,93 @@
+@implements IDisposable
+
+<article class="kpi-card @(OnClick.HasDelegate ? "is-clickable" : "")" @onclick="HandleClick" title="@Hint">
+    <div class="kpi-card-top">
+        <span>@Label</span>
+        @if (!string.IsNullOrWhiteSpace(Badge))
+        {
+            <span class="metric-badge @BadgeTone">@Badge</span>
+        }
+    </div>
+    <div class="kpi-value">@DisplayValue</div>
+    @if (Trend is { Count: > 1 })
+    {
+        <div class="kpi-sparkline" aria-hidden="true">
+            <svg viewBox="0 0 120 30" preserveAspectRatio="none">
+                <polyline points="@SparklinePoints" vector-effect="non-scaling-stroke" />
+            </svg>
+        </div>
+    }
+    <div class="kpi-foot">@Footer @if (OnClick.HasDelegate) { <span class="kpi-drill">Open →</span> }</div>
+</article>
+
+@code {
+    private CancellationTokenSource? animationCts;
+    private decimal animatedValue;
+    private bool hasAnimated;
+
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public string Badge { get; set; } = "";
+    [Parameter] public string BadgeTone { get; set; } = "success";
+    [Parameter] public string Footer { get; set; } = "";
+    [Parameter] public decimal? AnimateTo { get; set; }
+    [Parameter] public string Prefix { get; set; } = "";
+    [Parameter] public string Suffix { get; set; } = "";
+    [Parameter] public int Decimals { get; set; }
+    [Parameter] public IReadOnlyList<int>? Trend { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public string Hint { get; set; } = "";
+
+    private string DisplayValue => AnimateTo.HasValue
+        ? $"{Prefix}{animatedValue.ToString(Decimals == 0 ? "N0" : $"N{Decimals}")}{Suffix}"
+        : Value;
+
+    private string SparklinePoints
+    {
+        get
+        {
+            if (Trend is not { Count: > 1 }) return "";
+            var min = Trend.Min();
+            var max = Trend.Max();
+            var range = Math.Max(1, max - min);
+            return string.Join(" ", Trend.Select((value, index) =>
+            {
+                var x = index * (120d / (Trend.Count - 1));
+                var y = 27d - ((value - min) / (double)range * 23d);
+                return $"{x:0.#},{y:0.#}";
+            }));
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || !AnimateTo.HasValue || hasAnimated) return;
+        hasAnimated = true;
+        animationCts = new CancellationTokenSource();
+        var target = AnimateTo.Value;
+        const int frames = 22;
+
+        try
+        {
+            for (var i = 1; i <= frames; i++)
+            {
+                var t = i / (decimal)frames;
+                var eased = 1m - (decimal)Math.Pow((double)(1m - t), 3);
+                animatedValue = target * eased;
+                await InvokeAsync(StateHasChanged);
+                await Task.Delay(22, animationCts.Token);
+            }
+            animatedValue = target;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private Task HandleClick() => OnClick.HasDelegate ? OnClick.InvokeAsync() : Task.CompletedTask;
+
+    public void Dispose()
+    {
+        animationCts?.Cancel();
+        animationCts?.Dispose();
+    }
+}

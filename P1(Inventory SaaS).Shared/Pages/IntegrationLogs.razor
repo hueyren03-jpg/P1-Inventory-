@@ -1,0 +1,21 @@
+@page "/integrations/logs"
+
+<PageTitle>Integration Logs - P1 Inventory</PageTitle>
+<PageHeader Title="Integration Logs" Subtitle="Inspect sync, API and webhook delivery activity.">
+    <Actions></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search integration logs" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="5" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Time", "Integration", "Direction", "Operation", "Duration", "Result"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["10:42:08", "Shopify", "Inbound", "Order sync", "482 ms", "Completed"],
+        ["10:41:44", "ERP Sync", "Outbound", "Inventory update", "214 ms", "Completed"],
+        ["10:39:12", "Xero", "Outbound", "GRN bill sync", "1.2 s", "Completed"]
+    ];
+}

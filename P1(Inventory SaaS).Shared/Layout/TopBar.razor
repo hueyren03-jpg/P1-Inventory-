@@ -1,0 +1,75 @@
+@inject UiShellService Ui
+
+<header class="topbar">
+    <button class="icon-button mobile-menu" type="button" @onclick="OnMenuClick" aria-label="Toggle navigation"><AppIcon Name="menu" Size="19" /></button>
+
+    <button class="global-search" type="button" @onclick="() => Ui.SetCommandPalette(true)">
+        <AppIcon Name="search" Size="17" />
+        <span>Search products, SKUs, orders...</span>
+        <kbd>Ctrl K</kbd>
+    </button>
+
+    <div class="topbar-actions">
+        <div class="branch-switcher-wrap">
+            <button type="button" class="branch-switcher" @onclick="ToggleBranches">
+                <span class="branch-dot"></span>
+                <span>@Ui.ActiveBranch</span>
+                <span class="chevron">⌄</span>
+            </button>
+            @if (branchesOpen)
+            {
+                <div class="branch-menu">
+                    <div class="branch-menu-head"><strong>Branch scope</strong><span>Switch data context</span></div>
+                    @foreach (var branch in branches)
+                    {
+                        <button type="button" class="@(Ui.ActiveBranch == branch ? "active" : "")" @onclick="() => SelectBranch(branch)">
+                            <span>@branch</span>
+                            @if (Ui.ActiveBranch == branch) { <b>✓</b> }
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+
+        <button class="icon-button theme-trigger" type="button" aria-label="Change appearance" title="Change appearance" @onclick="CycleTheme">
+            <span>@ThemeGlyph</span>
+        </button>
+
+        <a class="btn btn-primary compact topbar-create" href="/quick-create"><AppIcon Name="plus" Size="16" />Create</a>
+        <a class="icon-button" href="/notifications" aria-label="Notifications"><AppIcon Name="bell" Size="18" /><span class="notification-dot"></span></a>
+        <a class="profile-button" href="/profile"><span class="avatar">HR</span><span class="profile-copy"><strong>Huey Ren</strong><small>Administrator</small></span><span>⌄</span></a>
+    </div>
+</header>
+
+@code {
+    private bool branchesOpen;
+    private readonly string[] branches = ["All branches", "Kuala Lumpur", "Petaling Jaya", "Penang", "Johor Bahru"];
+
+    [Parameter] public EventCallback OnMenuClick { get; set; }
+
+    private string ThemeGlyph => Ui.ThemeMode switch
+    {
+        "dark" => "☾",
+        "light" => "☀",
+        _ => "◐"
+    };
+
+    private void ToggleBranches() => branchesOpen = !branchesOpen;
+
+    private void SelectBranch(string branch)
+    {
+        Ui.SetBranch(branch);
+        branchesOpen = false;
+    }
+
+    private void CycleTheme()
+    {
+        var next = Ui.ThemeMode switch
+        {
+            "system" => "light",
+            "light" => "dark",
+            _ => "system"
+        };
+        Ui.SetThemeMode(next);
+    }
+}

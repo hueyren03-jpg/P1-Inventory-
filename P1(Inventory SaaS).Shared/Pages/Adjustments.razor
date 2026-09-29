@@ -1,0 +1,21 @@
+@page "/adjustments"
+
+<PageTitle>Stock Adjustments - P1 Inventory</PageTitle>
+<PageHeader Title="Stock Adjustments" Subtitle="Correct inventory with reasons, approvals and audit history.">
+    <Actions><a class="btn btn-primary" href="/adjustments/new"><AppIcon Name="plus" Size="15" /> New adjustment</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search stock adjustments" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="7" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Adjustment", "Warehouse", "Reason", "Lines", "Net qty", "Value impact", "Created by", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["ADJ-000829", "KL Central", "Damaged", "1", "-3", "-RM 435", "Aina Yusuf", "Pending Approval"],
+        ["ADJ-000828", "Penang", "Count correction", "3", "+8", "+RM 94", "Lee Wei Jian", "Approved"],
+        ["ADJ-000827", "Johor", "Data correction", "2", "-4", "-RM 28", "Marcus Lee", "Posted"]
+    ];
+}

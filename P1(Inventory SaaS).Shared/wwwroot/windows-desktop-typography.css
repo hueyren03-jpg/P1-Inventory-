@@ -1,0 +1,220 @@
+/* P1 Inventory SaaS — Windows desktop readability layer
+   Loaded last. Enlarges working UI typography for Windows desktop without affecting mobile. */
+
+@media (min-width: 821px) {
+    :root {
+        --desktop-body: 16px;
+        --desktop-control: 15px;
+        --desktop-small: 13.5px;
+        --desktop-meta: 12.5px;
+    }
+
+    body {
+        font-size: var(--desktop-body);
+        line-height: 1.58;
+    }
+
+    /* Sidebar / navigation */
+    .brand-copy strong { font-size: 16px !important; }
+    .brand-copy span { font-size: 13px !important; }
+    .tenant-switcher strong { font-size: 14px !important; }
+    .tenant-switcher small { font-size: 12.5px !important; }
+    .nav-section-title { font-size: 11.5px !important; letter-spacing: .085em; }
+    .nav-item {
+        font-size: 14.5px !important;
+        min-height: 44px !important;
+        line-height: 1.35;
+    }
+    .sidebar-footer .nav-item { font-size: 14px !important; }
+
+    /* Topbar */
+    .global-search,
+    .branch-switcher,
+    .profile-button,
+    .topbar .btn { font-size: 14px !important; }
+    .global-search { height: 42px !important; }
+    .profile-copy strong { font-size: 13.5px !important; }
+    .profile-copy small { font-size: 12px !important; }
+    .global-search kbd,
+    .command-search kbd { font-size: 11.5px !important; }
+
+    /* Page hierarchy */
+    .page-header h1 {
+        font-size: 32px !important;
+        line-height: 1.16;
+    }
+    .page-header p {
+        font-size: 15px !important;
+        line-height: 1.6;
+    }
+    .eyebrow { font-size: 11.5px !important; }
+    .breadcrumb { font-size: 13.5px !important; }
+
+    /* Buttons */
+    .btn {
+        font-size: 14.5px !important;
+        min-height: 42px !important;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+    }
+    .btn.compact {
+        min-height: 38px !important;
+        font-size: 13.5px !important;
+    }
+    .icon-button {
+        width: 42px !important;
+        height: 42px !important;
+    }
+
+    /* Panels */
+    .panel-header h2,
+    .detail-section h2,
+    .side-summary h2 {
+        font-size: 17px !important;
+        line-height: 1.35;
+    }
+    .panel-header p,
+    .detail-section p { font-size: 13.5px !important; }
+
+    /* KPI cards */
+    .kpi-card-top { font-size: 14px !important; }
+    .kpi-value {
+        font-size: 31px !important;
+        line-height: 1.05;
+    }
+    .kpi-foot { font-size: 13px !important; }
+    .metric-badge,
+    .status-pill {
+        font-size: 12.5px !important;
+    }
+    .status-pill {
+        min-height: 28px !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+
+    /* Tables — biggest readability improvement */
+    .data-table th {
+        font-size: 12px !important;
+        padding: 13px 15px !important;
+        letter-spacing: .045em !important;
+    }
+    .data-table td {
+        font-size: 14px !important;
+        padding: 14px 15px !important;
+        line-height: 1.45;
+    }
+    .cell-primary,
+    .record-link,
+    .record-button { font-size: 14px !important; }
+    .cell-secondary { font-size: 12.5px !important; }
+    .result-count,
+    .pagination,
+    .page-number,
+    .page-size { font-size: 13px !important; }
+    .table-action {
+        width: 34px !important;
+        height: 34px !important;
+        font-size: 17px !important;
+    }
+    .context-menu,
+    .context-menu button,
+    .context-menu a { font-size: 13.5px !important; }
+    .saved-views,
+    .view-chip,
+    .filter-chip,
+    .bulk-bar { font-size: 13.5px !important; }
+
+    /* Toolbars / filters */
+    .toolbar-search {
+        height: 42px !important;
+        font-size: 14px !important;
+    }
+    .toolbar-search input { font-size: 14px !important; }
+    .filter-panel h2 { font-size: 22px !important; }
+    .filter-panel p { font-size: 13.5px !important; }
+    .filter-fields label,
+    .column-chooser,
+    .density-toggle { font-size: 13.5px !important; }
+
+    /* Forms */
+    .form-grid label span,
+    .form-section label span,
+    .auth-card > label span,
+    .scanner-manual span {
+        font-size: 13.5px !important;
+    }
+    .form-grid input,
+    .form-grid select,
+    .form-grid textarea,
+    .form-section input,
+    .form-section select,
+    .form-section textarea,
+    .auth-card input,
+    .auth-card select,
+    .invite-row input,
+    .invite-row select,
+    .scanner-manual input {
+        font-size: 15px !important;
+        min-height: 44px !important;
+    }
+    .toggle-field small,
+    .form-section p,
+    .save-state { font-size: 13px !important; }
+
+    /* Detail / drawer / modal */
+    .detail-list dt { font-size: 12.5px !important; }
+    .detail-list dd { font-size: 14.5px !important; }
+    .drawer-header h2 { font-size: 24px !important; }
+    .drawer-header p { font-size: 13.5px !important; }
+    .drawer-fields dt { font-size: 12.5px !important; }
+    .drawer-fields dd { font-size: 14px !important; }
+    .drawer-intelligence span { font-size: 12px !important; }
+    .drawer-intelligence strong { font-size: 13.5px !important; }
+    .confirm-dialog h2 { font-size: 21px !important; }
+    .confirm-dialog p { font-size: 14px !important; }
+
+    /* Command palette */
+    .command-search input { font-size: 15px !important; }
+    .command-group > span { font-size: 11.5px !important; }
+    .command-group button strong { font-size: 14px !important; }
+    .command-group button small { font-size: 12.5px !important; }
+
+    /* Dashboard */
+    .chart-legend,
+    .health-row,
+    .alert-item,
+    .timeline-copy strong { font-size: 13.5px !important; }
+    .timeline-copy span,
+    .chart-tooltip,
+    .chart-tooltip span { font-size: 12.5px !important; }
+    .range-switcher button { font-size: 12.5px !important; }
+
+    /* Scanner */
+    .scanner-head h2 { font-size: 26px !important; }
+    .scanner-head p { font-size: 14px !important; }
+    .scanner-camera-placeholder small { font-size: 13px !important; }
+    .scanner-result strong { font-size: 14px !important; }
+    .scanner-result div span { font-size: 13px !important; }
+    .scanner-footer { font-size: 12px !important; }
+
+    /* Auth / misc */
+    .tab { font-size: 13.5px !important; }
+    .empty-state p,
+    .state-card p,
+    .help-card p,
+    .report-card p { font-size: 13.5px !important; }
+}
+
+/* Larger desktop screens get one more readability step. */
+@media (min-width: 1440px) {
+    .data-table td { font-size: 14.5px !important; }
+    .nav-item { font-size: 15px !important; }
+    .page-header p { font-size: 15.5px !important; }
+    .form-grid input,
+    .form-grid select,
+    .form-grid textarea,
+    .form-section input,
+    .form-section select,
+    .form-section textarea { font-size: 15.5px !important; }
+}

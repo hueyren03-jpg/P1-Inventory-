@@ -1,0 +1,22 @@
+@page "/categories"
+
+<PageTitle>Categories - P1 Inventory</PageTitle>
+<PageHeader Title="Categories" Subtitle="Organize products into a clean searchable catalog.">
+    <Actions><a class="btn btn-primary" href="#"><AppIcon Name="plus" Size="15" /> Add category</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search categories" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="4" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Category", "Products", "Subcategories", "Default tax", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["Electronics", "1,842", "12", "SST 8%", "Active"],
+        ["Consumables", "2,410", "8", "SST 8%", "Active"],
+        ["Apparel", "1,129", "18", "SST 0%", "Active"],
+        ["Packaging", "934", "6", "SST 8%", "Active"]
+    ];
+}

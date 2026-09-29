@@ -1,0 +1,356 @@
+@page "/products"
+@inject IInventoryUiService Data
+@inject UiShellService Ui
+
+<PageTitle>Products - P1 Inventory</PageTitle>
+
+<PageHeader Title="Products" Subtitle="Manage SKUs, pricing, categories and stock settings.">
+    <Actions>
+        <a class="btn btn-secondary" href="/products/import"><AppIcon Name="download" Size="15" /> Import</a>
+        <a class="btn btn-primary" href="/products/new"><AppIcon Name="plus" Size="15" /> Add product</a>
+    </Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <div class="list-toolbar">
+        <div class="toolbar-search">
+            <AppIcon Name="search" Size="16" />
+            <input @bind="search" @bind:event="oninput" placeholder="Search product, SKU or barcode" />
+        </div>
+        <button class="btn btn-secondary" type="button" @onclick="OpenFilters"><AppIcon Name="filter" Size="15" /> Filters @if (ActiveFilterCount > 0) { <span class="metric-badge info">@ActiveFilterCount</span> }</button>
+        <div class="density-toggle" aria-label="Table density">
+            <button type="button" class="@(density == "compact" ? "active" : "")" @onclick="SetCompact">Compact</button>
+            <button type="button" class="@(density == "normal" ? "active" : "")" @onclick="SetNormal">Normal</button>
+            <button type="button" class="@(density == "comfortable" ? "active" : "")" @onclick="SetComfortable">Comfort</button>
+        </div>
+        <button class="btn btn-secondary compact" type="button" @onclick="ToggleColumns">Columns</button>
+        <div class="toolbar-spacer"></div>
+        <span class="result-count">@FilteredProducts.Count products</span>
+    </div>
+
+    @if (columnsOpen)
+    {
+        <div class="column-chooser">
+            <span>Visible columns</span>
+            <label><input type="checkbox" @bind="showCategory" /> Category</label>
+            <label><input type="checkbox" @bind="showBranch" /> Branch</label>
+            <label><input type="checkbox" @bind="showReserved" /> Reserved</label>
+            <label><input type="checkbox" @bind="showCost" /> Avg. cost</label>
+            <label><input type="checkbox" @bind="showSelling" /> Selling</label>
+        </div>
+    }
+
+    <div class="saved-views">
+        @foreach (var view in views)
+        {
+            <button type="button" class="view-chip @(activeView == view ? "active" : "")" @onclick="() => ApplyView(view)">@view</button>
+        }
+        @if (!string.IsNullOrWhiteSpace(categoryFilter))
+        {
+            <span class="filter-chip">@categoryFilter <button type="button" @onclick="ClearCategoryFilter">×</button></span>
+        }
+        @if (!string.IsNullOrWhiteSpace(statusFilter))
+        {
+            <span class="filter-chip">@statusFilter <button type="button" @onclick="ClearStatusFilter">×</button></span>
+        }
+    </div>
+
+    @if (selected.Count > 0)
+    {
+        <div class="bulk-bar">
+            <strong>@selected.Count selected</strong>
+            <button class="btn btn-secondary compact" type="button" @onclick="BulkExport">Export</button>
+            <button class="btn btn-secondary compact" type="button" @onclick="BulkCategory">Change category</button>
+            <button class="btn btn-danger compact" type="button" @onclick="BulkDelete">Delete</button>
+        </div>
+    }
+
+    <div class="table-wrap">
+        <table class="data-table @density">
+            <thead>
+                <tr>
+                    <th class="table-select"><input type="checkbox" checked="@AllPageSelected" @onchange="TogglePageSelection" aria-label="Select page" /></th>
+                    <th class="sortable resizable" @onclick="SortName">Product @SortIndicator("name")</th>
+                    @if (showCategory) { <th class="sortable resizable" @onclick="SortCategory">Category @SortIndicator("category")</th> }
+                    @if (showBranch) { <th class="resizable">Branch</th> }
+                    <th class="numeric sortable resizable" @onclick="SortOnHand">On hand @SortIndicator("onhand")</th>
+                    @if (showReserved) { <th class="numeric resizable">Reserved</th> }
+                    <th class="numeric sortable resizable" @onclick="SortAvailable">Available @SortIndicator("available")</th>
+                    @if (showCost) { <th class="numeric resizable">Avg. cost</th> }
+                    @if (showSelling) { <th class="numeric resizable">Selling</th> }
+                    <th class="sortable resizable" @onclick="SortStatus">Status @SortIndicator("status")</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in PagedProducts)
+                {
+                    <tr class="@(selected.Contains(p.Id) ? "selected-row" : "")" @onclick="() => Ui.OpenProductDrawer(p)">
+                        <td class="table-select" @onclick:stopPropagation><input type="checkbox" checked="@selected.Contains(p.Id)" @onchange="e => ToggleSelected(p.Id, e)" aria-label="Select @p.Name" /></td>
+                        <td>
+                            <div class="product-cell">
+                                <button type="button" class="product-thumb product-thumb-button" @onclick:stopPropagation @onclick="() => Ui.OpenImage(p.ImageUrl, p.Name)">
+                                    <img src="@p.ImageUrl" alt="@p.Name" loading="lazy" />
+                                </button>
+                                <div>
+                                    <button type="button" class="cell-primary record-link record-button" @onclick:stopPropagation @onclick="() => Ui.OpenProductDrawer(p)">@p.Name</button>
+                                    <div class="cell-secondary">@p.Sku</div>
+                                </div>
+                            </div>
+                        </td>
+                        @if (showCategory) { <td>@p.Category</td> }
+                        @if (showBranch) { <td>@BranchLabel(p.Warehouse)</td> }
+                        <td class="numeric">@p.OnHand</td>
+                        @if (showReserved) { <td class="numeric">@p.Reserved</td> }
+                        <td class="numeric"><strong>@p.Available</strong></td>
+                        @if (showCost) { <td class="numeric">RM @p.AverageCost.ToString("N2")</td> }
+                        @if (showSelling) { <td class="numeric">RM @p.SellingPrice.ToString("N2")</td> }
+                        <td><StatusPill Text="@p.Status" Tone="@Tone(p.Status)" /></td>
+                        <td @onclick:stopPropagation>
+                            <div class="context-wrap">
+                                <button class="table-action" type="button" @onclick="() => ToggleContext(p.Id)">⋯</button>
+                                @if (contextId == p.Id)
+                                {
+                                    <div class="context-menu">
+                                        <button type="button" @onclick="() => OpenQuickView(p)">Quick view</button>
+                                        <a href="@($"/products/{p.Id}/edit")">Edit product</a>
+                                        <button type="button" @onclick="() => Duplicate(p)">Duplicate</button>
+                                        <a href="/adjustments/new">Adjust stock</a>
+                                        <hr />
+                                        <button type="button" @onclick="() => Archive(p)">Archive</button>
+                                        <button type="button" class="danger" @onclick="() => DeleteProduct(p)">Delete</button>
+                                    </div>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination">
+        <span>Showing @FirstItem–@LastItem of @FilteredProducts.Count</span>
+        <div>
+            <select class="page-size" @bind="pageSize"><option value="4">4 / page</option><option value="6">6 / page</option><option value="10">10 / page</option></select>
+            <button class="btn btn-secondary compact" disabled="@(currentPage <= 1)" @onclick="PreviousPage">Previous</button>
+            <span class="page-number">@currentPage / @TotalPages</span>
+            <button class="btn btn-secondary compact" disabled="@(currentPage >= TotalPages)" @onclick="NextPage">Next</button>
+        </div>
+    </div>
+</section>
+
+@if (filtersOpen)
+{
+    <div class="overlay-shell drawer-overlay" @onclick="CloseFilters">
+        <aside class="filter-panel" @onclick:stopPropagation>
+            <div class="filter-panel-head">
+                <div><h2>Filters</h2><p>Refine products without leaving the table.</p></div>
+                <button class="icon-button" type="button" @onclick="CloseFilters">×</button>
+            </div>
+            <div class="filter-fields">
+                <label>Category
+                    <select @bind="categoryFilter">
+                        <option value="">All categories</option>
+                        @foreach (var category in allProducts.Select(x => x.Category).Distinct().Order()) { <option value="@category">@category</option> }
+                    </select>
+                </label>
+                <label>Stock status
+                    <select @bind="statusFilter"><option value="">All statuses</option><option>In Stock</option><option>Low Stock</option><option>Out of Stock</option></select>
+                </label>
+                <label>Minimum available
+                    <input type="number" min="0" @bind="minimumAvailable" />
+                </label>
+                <div class="filter-checks">
+                    <label><input type="checkbox" @bind="onlyWithStock" /> Only products with available stock</label>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button class="btn btn-ghost" type="button" @onclick="ClearFilters">Clear</button>
+                <button class="btn btn-primary" type="button" @onclick="ApplyFilters">Apply filters</button>
+            </div>
+        </aside>
+    </div>
+}
+
+@code {
+    private List<ProductRow> allProducts = [];
+    private readonly HashSet<string> selected = [];
+    private readonly string[] views = ["All products", "Low stock", "Out of stock", "Electronics"];
+    private string search = "";
+    private string categoryFilter = "";
+    private string statusFilter = "";
+    private string activeView = "All products";
+    private string density = "normal";
+    private string sortColumn = "name";
+    private string? contextId;
+    private bool sortAscending = true;
+    private bool filtersOpen;
+    private bool columnsOpen;
+    private bool onlyWithStock;
+    private bool showCategory = true;
+    private bool showBranch = true;
+    private bool showReserved = true;
+    private bool showCost = true;
+    private bool showSelling = true;
+    private int minimumAvailable;
+    private int currentPage = 1;
+    private int pageSize = 6;
+
+    private List<ProductRow> FilteredProducts
+    {
+        get
+        {
+            IEnumerable<ProductRow> query = allProducts;
+            if (!string.IsNullOrWhiteSpace(search)) query = query.Where(p => p.Name.Contains(search, StringComparison.OrdinalIgnoreCase) || p.Sku.Contains(search, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(categoryFilter)) query = query.Where(p => p.Category == categoryFilter);
+            if (!string.IsNullOrWhiteSpace(statusFilter)) query = query.Where(p => p.Status == statusFilter);
+            if (minimumAvailable > 0) query = query.Where(p => p.Available >= minimumAvailable);
+            if (onlyWithStock) query = query.Where(p => p.Available > 0);
+            if (Ui.ActiveBranch != "All branches") query = query.Where(p => BranchMatches(p.Warehouse, Ui.ActiveBranch));
+
+            query = sortColumn switch
+            {
+                "category" => sortAscending ? query.OrderBy(p => p.Category) : query.OrderByDescending(p => p.Category),
+                "onhand" => sortAscending ? query.OrderBy(p => p.OnHand) : query.OrderByDescending(p => p.OnHand),
+                "available" => sortAscending ? query.OrderBy(p => p.Available) : query.OrderByDescending(p => p.Available),
+                "status" => sortAscending ? query.OrderBy(p => p.Status) : query.OrderByDescending(p => p.Status),
+                _ => sortAscending ? query.OrderBy(p => p.Name) : query.OrderByDescending(p => p.Name)
+            };
+
+            return query.ToList();
+        }
+    }
+
+    private IReadOnlyList<ProductRow> PagedProducts => FilteredProducts.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling(FilteredProducts.Count / (double)pageSize));
+    private int FirstItem => FilteredProducts.Count == 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
+    private int LastItem => Math.Min(currentPage * pageSize, FilteredProducts.Count);
+    private bool AllPageSelected => PagedProducts.Count > 0 && PagedProducts.All(p => selected.Contains(p.Id));
+    private int ActiveFilterCount => (string.IsNullOrWhiteSpace(categoryFilter) ? 0 : 1) + (string.IsNullOrWhiteSpace(statusFilter) ? 0 : 1) + (minimumAvailable > 0 ? 1 : 0) + (onlyWithStock ? 1 : 0);
+
+    protected override async Task OnInitializedAsync() => allProducts = (await Data.GetProductsAsync()).ToList();
+
+    private void OpenFilters() => filtersOpen = true;
+    private void CloseFilters() => filtersOpen = false;
+    private void ToggleColumns() => columnsOpen = !columnsOpen;
+    private void SetCompact() => density = "compact";
+    private void SetNormal() => density = "normal";
+    private void SetComfortable() => density = "comfortable";
+    private void ClearCategoryFilter() { categoryFilter = ""; activeView = "All products"; currentPage = 1; }
+    private void ClearStatusFilter() { statusFilter = ""; activeView = "All products"; currentPage = 1; }
+    private void SortName() => SortBy("name");
+    private void SortCategory() => SortBy("category");
+    private void SortOnHand() => SortBy("onhand");
+    private void SortAvailable() => SortBy("available");
+    private void SortStatus() => SortBy("status");
+
+    private void SortBy(string column)
+    {
+        if (sortColumn == column) sortAscending = !sortAscending;
+        else { sortColumn = column; sortAscending = true; }
+        currentPage = 1;
+    }
+
+    private string SortIndicator(string column) => sortColumn == column ? (sortAscending ? "↑" : "↓") : "↕";
+
+    private void ApplyView(string view)
+    {
+        activeView = view;
+        categoryFilter = view == "Electronics" ? "Electronics" : "";
+        statusFilter = view switch { "Low stock" => "Low Stock", "Out of stock" => "Out of Stock", _ => "" };
+        currentPage = 1;
+        Ui.ShowToast("View applied", view, "info");
+    }
+
+    private void ApplyFilters()
+    {
+        activeView = "All products";
+        currentPage = 1;
+        filtersOpen = false;
+        Ui.ShowToast("Filters applied", $"{FilteredProducts.Count} products match the current filters.", "info");
+    }
+
+    private void ClearFilters()
+    {
+        categoryFilter = statusFilter = "";
+        minimumAvailable = 0;
+        onlyWithStock = false;
+        activeView = "All products";
+        currentPage = 1;
+    }
+
+    private void ToggleSelected(string id, ChangeEventArgs e)
+    {
+        if (e.Value is bool value && value) selected.Add(id); else selected.Remove(id);
+    }
+
+    private void TogglePageSelection(ChangeEventArgs e)
+    {
+        var check = e.Value is bool value && value;
+        foreach (var p in PagedProducts) { if (check) selected.Add(p.Id); else selected.Remove(p.Id); }
+    }
+
+    private void BulkExport() => Ui.ShowToast("Export prepared", $"{selected.Count} selected products are ready for export.", "success");
+    private void BulkCategory() => Ui.ShowToast("Bulk edit ready", "Category editing will be connected to the backend later.", "info");
+
+    private async Task BulkDelete()
+    {
+        if (!await Ui.ConfirmAsync("Delete selected products?", $"This will remove {selected.Count} products from the current mock list.", "Delete products")) return;
+        foreach (var id in selected.ToList())
+            await Data.DeleteProductAsync(id);
+        allProducts.RemoveAll(p => selected.Contains(p.Id));
+        var count = selected.Count;
+        selected.Clear();
+        Ui.ShowToast("Products deleted", $"{count} products were removed.", "success", "Undo", () => Ui.ShowToast("Undo is UI-only", "Backend history will power real undo later.", "info"));
+    }
+
+    private void ToggleContext(string id) => contextId = contextId == id ? null : id;
+    private void OpenQuickView(ProductRow product) { contextId = null; Ui.OpenProductDrawer(product); }
+    private async Task Duplicate(ProductRow product)
+    {
+        contextId = null;
+        var duplicate = await Data.DuplicateProductAsync(product.Id);
+        if (duplicate is null) return;
+        allProducts.Insert(0, duplicate);
+        Ui.ShowToast("Product duplicated", $"{duplicate.Name} was added as a mock record.", "success");
+    }
+    private void Archive(ProductRow product) { contextId = null; Ui.ShowToast("Product archived", product.Name, "warning", "Undo", () => Ui.ShowToast("Archive reverted", product.Name, "success")); }
+
+    private async Task DeleteProduct(ProductRow product)
+    {
+        contextId = null;
+        if (!await Ui.ConfirmAsync("Delete product?", $"{product.Name} will be removed from the current product list.", "Delete product")) return;
+        await Data.DeleteProductAsync(product.Id);
+        allProducts.Remove(product);
+        selected.Remove(product.Id);
+        Ui.ShowToast("Product deleted", product.Name, "success");
+    }
+
+    private void PreviousPage() { if (currentPage > 1) currentPage--; }
+    private void NextPage() { if (currentPage < TotalPages) currentPage++; }
+
+    private static bool BranchMatches(string warehouse, string branch) => branch switch
+    {
+        "Kuala Lumpur" => warehouse.Contains("KL", StringComparison.OrdinalIgnoreCase),
+        "Petaling Jaya" => warehouse.Contains("PJ", StringComparison.OrdinalIgnoreCase),
+        "Johor Bahru" => warehouse.Contains("Johor", StringComparison.OrdinalIgnoreCase),
+        _ => warehouse.Contains(branch, StringComparison.OrdinalIgnoreCase)
+    };
+
+    private static string BranchLabel(string warehouse) => warehouse switch
+    {
+        var x when x.Contains("KL", StringComparison.OrdinalIgnoreCase) => "Kuala Lumpur",
+        var x when x.Contains("PJ", StringComparison.OrdinalIgnoreCase) => "Petaling Jaya",
+        var x when x.Contains("Johor", StringComparison.OrdinalIgnoreCase) => "Johor Bahru",
+        _ => warehouse
+    };
+
+    private static string Tone(string status) => status switch
+    {
+        "In Stock" => "success",
+        "Low Stock" => "warning",
+        "Out of Stock" => "danger",
+        _ => "neutral"
+    };
+}

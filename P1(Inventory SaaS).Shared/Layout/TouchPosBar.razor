@@ -1,0 +1,28 @@
+@inject UiShellService Ui
+
+<nav class="touch-pos-bar" aria-label="POS quick actions">
+    <button type="button" class="touch-pos-action scan" @onclick="OpenScanner">
+        <span class="touch-pos-icon">⌗</span>
+        <span><strong>Scan</strong><small>Barcode / QR</small></span>
+    </button>
+    <a class="touch-pos-action" href="/stock-in/new">
+        <span class="touch-pos-icon"><AppIcon Name="arrow-down" Size="21" /></span>
+        <span><strong>Stock In</strong><small>Receive items</small></span>
+    </a>
+    <a class="touch-pos-action" href="/stock-out/new">
+        <span class="touch-pos-icon"><AppIcon Name="arrow-up" Size="21" /></span>
+        <span><strong>Stock Out</strong><small>Issue items</small></span>
+    </a>
+    <a class="touch-pos-action" href="/transfers/new">
+        <span class="touch-pos-icon"><AppIcon Name="truck" Size="21" /></span>
+        <span><strong>Transfer</strong><small>Move stock</small></span>
+    </a>
+    <a class="touch-pos-action" href="/adjustments/new">
+        <span class="touch-pos-icon"><AppIcon Name="swap" Size="21" /></span>
+        <span><strong>Adjust</strong><small>Correct stock</small></span>
+    </a>
+</nav>
+
+@code {
+    private void OpenScanner() => Ui.SetScanner(true);
+}

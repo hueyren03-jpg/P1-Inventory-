@@ -1,0 +1,101 @@
+@page "/products/import"
+@inject UiShellService Ui
+@inject NavigationManager Navigation
+
+<PageTitle>Import Products - P1 Inventory</PageTitle>
+<div class="breadcrumb"><a href="javascript:history.back()">Back</a><span>/</span><span>Import Products</span></div>
+<PageHeader Title="Import Products" Subtitle="Upload, validate and review products before applying changes." />
+
+<section class="panel form-page">
+    <FormSection Title="Upload file" Description="Use CSV or XLSX with SKU as the unique product identifier.">
+        <div class="form-grid">
+            <label><span>File</span><input type="file" accept=".csv,.xlsx" @onchange="FileSelected" /></label>
+            <label><span>Import mode</span><select><option>Create and update products</option><option>Create new products only</option></select></label>
+            <label><span>Default branch</span><select><option>Kuala Lumpur</option><option>Petaling Jaya</option><option>Penang</option><option>Johor Bahru</option></select></label>
+        </div>
+    </FormSection>
+
+    <FormSection Title="Validation" Description="Choose how conflicts and invalid rows are handled.">
+        <div class="form-grid">
+            <label class="toggle-field"><span><strong>Skip invalid rows</strong><small>Continue import and produce an error report</small></span><input type="checkbox" checked /></label>
+            <label class="toggle-field"><span><strong>Update existing SKUs</strong><small>Match existing products by SKU</small></span><input type="checkbox" checked /></label>
+        </div>
+    </FormSection>
+
+    @if (showProgress)
+    {
+        <div class="import-progress-card">
+            <div class="import-progress-head">
+                <div><strong>@(importComplete ? "Validation complete" : "Validating products")</strong><div class="cell-secondary">@fileName</div></div>
+                <strong>@progress%</strong>
+            </div>
+            <div class="import-progress-track"><span style="@($"width:{progress}%")"></span></div>
+            <div class="import-stats">
+                <span>@processed / 1,000 processed</span>
+                <span>✓ @successful successful</span>
+                <span>⚠ @needsReview need review</span>
+            </div>
+            @if (importComplete)
+            {
+                <div class="import-review-actions">
+                    <button type="button" class="btn btn-secondary compact" @onclick="DownloadErrorReport">Review 6 issues</button>
+                    <button type="button" class="btn btn-primary compact" @onclick="ApplyImport">Apply 994 products</button>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="form-actions">
+        <a class="btn btn-secondary" href="/products">Cancel</a>
+        <button class="btn btn-primary @(validating ? "is-loading" : "")" disabled="@(validating || string.IsNullOrWhiteSpace(fileName))" @onclick="ValidateImportAsync">
+            @if (validating) { <span class="btn-spinner"></span> }
+            @(validating ? "Validating…" : "Validate import")
+        </button>
+    </div>
+</section>
+
+@code {
+    private string fileName = "";
+    private bool validating;
+    private bool showProgress;
+    private bool importComplete;
+    private int progress;
+    private int processed;
+    private int successful;
+    private int needsReview;
+
+    private void FileSelected(ChangeEventArgs _)
+    {
+        fileName = "products-import.csv";
+        importComplete = false;
+        showProgress = false;
+        progress = processed = successful = needsReview = 0;
+        Ui.ShowToast("File selected", fileName, "info");
+    }
+
+    private async Task ValidateImportAsync()
+    {
+        if (validating) return;
+        validating = true;
+        showProgress = true;
+        importComplete = false;
+
+        for (var step = 1; step <= 10; step++)
+        {
+            await Task.Delay(120);
+            progress = step * 10;
+            processed = step * 100;
+            successful = Math.Max(0, processed - (step < 10 ? step / 2 : 6));
+            needsReview = processed - successful;
+        }
+
+        successful = 994;
+        needsReview = 6;
+        validating = false;
+        importComplete = true;
+        Ui.ShowToast("Import validated", "994 products are ready. 6 rows need review.", "success");
+    }
+
+    private void DownloadErrorReport() => Ui.ShowToast("Issue report prepared", "The mock error-report action is ready for backend file generation.", "warning");
+    private void ApplyImport() => Ui.ShowToast("Import applied", "994 products were applied in the UI preview.", "success", "View products", () => Navigation.NavigateTo("/products"));
+}

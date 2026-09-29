@@ -1,0 +1,21 @@
+@page "/inventory/balance"
+
+<PageTitle>Stock Balance - P1 Inventory</PageTitle>
+<PageHeader Title="Stock Balance" Subtitle="Detailed on-hand, reserved and available quantities by location.">
+    <Actions><button class="btn btn-secondary">Export CSV</button></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search stock balance" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="7" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["SKU", "Product", "Warehouse", "Location", "On hand", "Reserved", "Available", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["HUB-8IN1-GR", "USB-C Hub 8-in-1", "KL Central", "A-01-02", "420", "35", "385", "In Stock"],
+        ["SCN-S2", "Wireless Scanner S2", "KL Central", "B-02-01", "18", "6", "12", "Low Stock"],
+        ["ROLL-80", "Receipt Roll 80mm", "KL Central", "C-05-01", "0", "0", "0", "Out of Stock"]
+    ];
+}

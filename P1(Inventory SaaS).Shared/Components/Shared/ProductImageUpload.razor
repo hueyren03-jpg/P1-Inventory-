@@ -1,0 +1,118 @@
+@using Microsoft.AspNetCore.Components.Forms
+@inject UiShellService Ui
+
+<div class="product-image-upload">
+    <div class="product-image-dropzone @(string.IsNullOrWhiteSpace(previewUrl) ? "" : "has-image")">
+        <InputFile id="@inputId"
+                   class="product-image-input"
+                   accept="image/png,image/jpeg,image/webp"
+                   OnChange="HandleImageSelected" />
+
+        <div class="product-image-preview @(string.IsNullOrWhiteSpace(previewUrl) ? "is-empty" : "")">
+            @if (!string.IsNullOrWhiteSpace(previewUrl))
+            {
+                <button type="button" class="product-preview-button" @onclick="OpenPreview">
+                    <img src="@previewUrl" alt="Product image preview" />
+                    <span>Click to enlarge</span>
+                </button>
+            }
+            else
+            {
+                <div class="product-image-placeholder">
+                    <AppIcon Name="box" Size="26" />
+                    <span>No image</span>
+                </div>
+            }
+        </div>
+
+        <div class="dropzone-copy">
+            <strong>@Label</strong>
+            @if (string.IsNullOrWhiteSpace(previewUrl))
+            {
+                <span class="dropzone-hint"><AppIcon Name="plus" Size="14" /> Drop an image here or browse files</span>
+            }
+            else
+            {
+                <span>Image ready. Use Replace to choose another file.</span>
+            }
+            <span>PNG, JPG or WebP · Maximum 5 MB</span>
+        </div>
+    </div>
+
+    <div class="product-image-controls">
+        <div class="product-image-actions">
+            @if (!string.IsNullOrWhiteSpace(previewUrl))
+            {
+                <label class="btn btn-secondary compact" for="@inputId"><AppIcon Name="plus" Size="14" /> Replace</label>
+                <button type="button" class="btn btn-ghost compact" @onclick="RemoveImage">Remove</button>
+                <button type="button" class="btn btn-ghost compact" @onclick="OpenPreview">View larger</button>
+            }
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="product-image-error">@errorMessage</div>
+        }
+    </div>
+</div>
+
+@code {
+    private const long MaxFileSize = 5 * 1024 * 1024;
+    private readonly string inputId = $"product-image-{Guid.NewGuid():N}";
+    private string? previewUrl;
+    private string? errorMessage;
+    private bool initialized;
+
+    [Parameter] public string Label { get; set; } = "Product image";
+    [Parameter] public string? InitialImageUrl { get; set; }
+    [Parameter] public EventCallback<string?> ImageChanged { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (initialized) return;
+        previewUrl = InitialImageUrl;
+        initialized = true;
+    }
+
+    private async Task HandleImageSelected(InputFileChangeEventArgs e)
+    {
+        errorMessage = null;
+        var file = e.File;
+
+        if (file.Size > MaxFileSize)
+        {
+            errorMessage = "Image must be 5 MB or smaller.";
+            Ui.ShowToast("Image too large", errorMessage, "danger");
+            return;
+        }
+
+        if (file.ContentType is not ("image/png" or "image/jpeg" or "image/webp"))
+        {
+            errorMessage = "Please choose a PNG, JPG or WebP image.";
+            Ui.ShowToast("Unsupported image", errorMessage, "danger");
+            return;
+        }
+
+        await using var stream = file.OpenReadStream(MaxFileSize);
+        using var memory = new MemoryStream();
+        await stream.CopyToAsync(memory);
+
+        previewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(memory.ToArray())}";
+        await ImageChanged.InvokeAsync(previewUrl);
+        Ui.ShowToast("Image ready", $"{file.Name} has been added to the product form.", "success");
+    }
+
+    private async Task RemoveImage()
+    {
+        previewUrl = null;
+        errorMessage = null;
+        await ImageChanged.InvokeAsync(null);
+        Ui.ShowToast("Image removed", "The product image was cleared from the form.", "info");
+    }
+
+    private void OpenPreview()
+    {
+        if (!string.IsNullOrWhiteSpace(previewUrl))
+            Ui.OpenImage(previewUrl, Label);
+    }
+}

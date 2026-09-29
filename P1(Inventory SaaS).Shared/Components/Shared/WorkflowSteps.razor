@@ -1,0 +1,15 @@
+<div class="workflow-steps">
+    @for (var i = 0; i < Steps.Count; i++)
+    {
+        var state = i < CurrentIndex ? "done" : i == CurrentIndex ? "current" : "future";
+        <div class="workflow-step @state">
+            <span class="workflow-node">@(i < CurrentIndex ? "✓" : (i + 1).ToString())</span>
+            <span>@Steps[i]</span>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<string> Steps { get; set; } = [];
+    [Parameter] public int CurrentIndex { get; set; }
+}

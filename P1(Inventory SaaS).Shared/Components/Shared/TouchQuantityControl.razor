@@ -1,0 +1,67 @@
+<div class="touch-quantity">
+    <div class="touch-quantity-main">
+        <button type="button" class="touch-qty-step" @onclick="Decrease" aria-label="Decrease quantity">−</button>
+        <button type="button" class="touch-qty-value" @onclick="OpenPad" aria-label="Enter quantity with calculator">
+            <strong>@Value.ToString("N0")</strong>
+            <small>Tap for keypad</small>
+        </button>
+        <button type="button" class="touch-qty-step" @onclick="Increase" aria-label="Increase quantity">+</button>
+    </div>
+
+    <div class="touch-quantity-presets" aria-label="Quick quantity presets">
+        @foreach (var preset in Presets)
+        {
+            <button type="button" @onclick="() => ApplyPreset(preset)">@PresetLabel(preset)</button>
+        }
+        @if (MaxShortcut.HasValue)
+        {
+            <button type="button" class="touch-max-button" @onclick="ApplyMax">MAX @MaxShortcut.Value.ToString("N0")</button>
+        }
+    </div>
+</div>
+
+<TouchCalculatorPad Open="padOpen"
+                    Title="@Label"
+                    ContextText="@ContextText"
+                    InitialValue="@Value"
+                    Decimals="0"
+                    AllowNegative="@AllowNegative"
+                    Min="@EffectiveMin"
+                    Max="@Max"
+                    Suffix="@Suffix"
+                    OnApply="ApplyCalculator"
+                    OnCancel="ClosePad" />
+
+@code {
+    [Parameter] public int Value { get; set; }
+    [Parameter] public EventCallback<int> ValueChanged { get; set; }
+    [Parameter] public int Step { get; set; } = 1;
+    [Parameter] public int Min { get; set; } = 0;
+    [Parameter] public int Max { get; set; } = 999999;
+    [Parameter] public int? MaxShortcut { get; set; }
+    [Parameter] public bool AllowNegative { get; set; }
+    [Parameter] public string Label { get; set; } = "Quantity";
+    [Parameter] public string ContextText { get; set; } = "Tap digits or calculate the amount, then tap Done.";
+    [Parameter] public string Suffix { get; set; } = " units";
+    [Parameter] public IReadOnlyList<int> Presets { get; set; } = [1, 5, 10, 50];
+
+    private bool padOpen;
+    private int EffectiveMin => AllowNegative ? -Max : Min;
+
+    private void OpenPad() => padOpen = true;
+    private Task ClosePad() { padOpen = false; return Task.CompletedTask; }
+    private async Task Decrease() => await SetValue(Value - Step);
+    private async Task Increase() => await SetValue(Value + Step);
+    private async Task ApplyPreset(int preset) => await SetValue(Value + preset);
+    private async Task ApplyMax() { if (MaxShortcut.HasValue) await SetValue(MaxShortcut.Value); }
+    private async Task ApplyCalculator(decimal value) { padOpen = false; await SetValue((int)decimal.Truncate(value)); }
+
+    private async Task SetValue(int value)
+    {
+        var next = Math.Clamp(value, EffectiveMin, Max);
+        Value = next;
+        await ValueChanged.InvokeAsync(next);
+    }
+
+    private static string PresetLabel(int preset) => preset > 0 ? $"+{preset}" : preset.ToString();
+}

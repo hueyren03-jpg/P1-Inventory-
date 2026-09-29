@@ -1,0 +1,12 @@
+@page "/reports"
+<PageTitle>Reports - P1 Inventory</PageTitle>
+<PageHeader Title="Reports" Subtitle="Inventory, purchasing, sales and warehouse performance."><Actions><button class="btn btn-secondary">Scheduled reports</button><button class="btn btn-primary">Export report</button></Actions></PageHeader>
+<section class="report-grid">
+    <a class="report-card" href="#"><span class="report-icon"><AppIcon Name="layers" /></span><div><strong>Inventory Valuation</strong><span>Stock value by warehouse, category and date.</span></div></a>
+    <a class="report-card" href="#"><span class="report-icon"><AppIcon Name="activity" /></span><div><strong>Stock Movement</strong><span>In, out, transfer and adjustment analysis.</span></div></a>
+    <a class="report-card" href="#"><span class="report-icon"><AppIcon Name="chart" /></span><div><strong>Inventory Turnover</strong><span>Velocity, aging and slow-moving inventory.</span></div></a>
+    <a class="report-card" href="#"><span class="report-icon"><AppIcon Name="document" /></span><div><strong>Purchasing</strong><span>PO spend, lead time and receipt performance.</span></div></a>
+    <a class="report-card" href="#"><span class="report-icon"><AppIcon Name="truck" /></span><div><strong>Warehouse Performance</strong><span>Counts, transfers and fulfilment efficiency.</span></div></a>
+    <a class="report-card" href="#"><span class="report-icon"><AppIcon Name="users" /></span><div><strong>Supplier Performance</strong><span>Fill rate, on-time rate and price variance.</span></div></a>
+</section>
+<section class="panel report-preview"><div class="panel-header"><div><h2>Inventory value trend</h2><p>All warehouses · Last 6 months</p></div><button class="btn btn-secondary compact">Last 6 months ⌄</button></div><div class="line-chart"><svg viewBox="0 0 900 220" preserveAspectRatio="none"><polyline points="0,170 150,142 300,154 450,108 600,92 750,70 900,52" fill="none" stroke="currentColor" stroke-width="4" /></svg><div class="chart-axis"><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span></div></div></section>

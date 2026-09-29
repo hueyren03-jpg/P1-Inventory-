@@ -1,0 +1,20 @@
+@page "/profile/sessions"
+
+<PageTitle>Active Sessions - P1 Inventory</PageTitle>
+<PageHeader Title="Active Sessions" Subtitle="Review devices currently signed into your account.">
+    <Actions><button class="btn btn-secondary">Sign out other sessions</button></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search active sessions" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="5" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Device", "Location", "IP", "Last active", "Signed in", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["Windows \u00b7 Chrome", "Kuala Lumpur, MY", "203.0.113.24", "Now", "14 Sep 8:02 AM", "Active"],
+        ["iPhone \u00b7 Safari", "Kuala Lumpur, MY", "203.0.113.52", "Yesterday", "13 Sep 6:18 PM", "Active"]
+    ];
+}

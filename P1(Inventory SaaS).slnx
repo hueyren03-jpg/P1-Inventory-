@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="P1(Inventory SaaS).Shared/P1(Inventory SaaS).Shared.csproj" />
+  <Project Path="P1(Inventory SaaS).Web/P1(Inventory SaaS).Web.csproj" />
+  <Project Path="P1(Inventory SaaS)/P1(Inventory SaaS).csproj" />
+</Solution>

@@ -1,0 +1,22 @@
+@page "/billing/plans"
+@page "/billing/subscription"
+
+<PageTitle>Plans - P1 Inventory</PageTitle>
+<PageHeader Title="Plans" Subtitle="Compare SaaS plans and included limits.">
+    <Actions></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search plans" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="6" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Plan", "Monthly", "Users", "Warehouses", "SKUs", "API", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["Starter", "RM 99", "5", "1", "10,000", "No", "Available"],
+        ["Growth", "RM 299", "20", "5", "100,000", "Yes", "Active"],
+        ["Scale", "RM 799", "Unlimited", "20", "500,000", "Yes", "Available"]
+    ];
+}

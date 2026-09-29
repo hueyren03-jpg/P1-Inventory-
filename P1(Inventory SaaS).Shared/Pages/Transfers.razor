@@ -1,0 +1,84 @@
+@page "/transfers"
+@inject IInventoryUiService Data
+@inject UiShellService Ui
+
+<PageTitle>Transfers - P1 Inventory</PageTitle>
+
+<PageHeader Title="Stock transfers" Subtitle="Move inventory between warehouses with auditable workflow states.">
+    <Actions>
+        <a class="btn btn-primary" href="/transfers/new"><AppIcon Name="plus" Size="15" /> New transfer</a>
+    </Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <div class="list-toolbar">
+        <div class="toolbar-search"><AppIcon Name="search" Size="16" /><input @bind="search" @bind:event="oninput" placeholder="Search transfer number" /></div>
+        <button class="btn btn-secondary" @onclick="CycleStatus"><AppIcon Name="filter" Size="15" /> Filters</button>
+        <button class="btn btn-secondary" @onclick="CycleStatus">@statusFilter ⌄</button>
+    </div>
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Transfer</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th class="numeric">Items</th>
+                    <th class="numeric">Qty</th>
+                    <th>Created</th>
+                    <th>Expected</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in FilteredRows)
+                {
+                    <tr>
+                        <td><a class="record-link" href="@($"/transfers/{row.Number}")">@row.Number</a></td>
+                        <td>@row.From</td>
+                        <td>@row.To</td>
+                        <td class="numeric">@row.Items</td>
+                        <td class="numeric">@row.Quantity</td>
+                        <td>@row.Created.ToString("dd MMM yyyy")</td>
+                        <td>@row.Expected.ToString("dd MMM yyyy")</td>
+                        <td><StatusPill Text="@row.Status" Tone="@Tone(row.Status)" /></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@code {
+    private IReadOnlyList<TransferRow> rows = [];
+    private string search = "";
+    private string statusFilter = "All statuses";
+
+    private IEnumerable<TransferRow> FilteredRows => rows.Where(row =>
+        (string.IsNullOrWhiteSpace(search) || row.Number.Contains(search, StringComparison.OrdinalIgnoreCase) || row.From.Contains(search, StringComparison.OrdinalIgnoreCase) || row.To.Contains(search, StringComparison.OrdinalIgnoreCase)) &&
+        (statusFilter == "All statuses" || row.Status == statusFilter));
+
+    protected override async Task OnInitializedAsync()
+        => rows = await Data.GetTransfersAsync();
+
+    private void CycleStatus()
+    {
+        statusFilter = statusFilter switch
+        {
+            "All statuses" => "Picking",
+            "Picking" => "In Transit",
+            "In Transit" => "Received",
+            _ => "All statuses"
+        };
+        Ui.ShowToast("Transfer filter applied", statusFilter, "info");
+    }
+
+    private static string Tone(string status) => status switch
+    {
+        "Completed" or "Received" => "success",
+        "Picking" => "warning",
+        "In Transit" => "info",
+        _ => "neutral"
+    };
+}

@@ -1,0 +1,55 @@
+<div class="table-wrap">
+    <table class="data-table @CssClass">
+        <thead>
+            <tr>
+                @foreach (var header in Headers)
+                {
+                    <th>@header</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Rows)
+            {
+                <tr>
+                    @for (var i = 0; i < row.Count; i++)
+                    {
+                        var cell = row[i];
+                        if (i == StatusColumn)
+                        {
+                            <td><StatusPill Text="@cell" Tone="@Tone(cell)" /></td>
+                        }
+                        else if (i == LinkColumn)
+                        {
+                            <td><a class="record-link" href="@ResolveHref(cell)">@cell</a></td>
+                        }
+                        else
+                        {
+                            <td>@cell</td>
+                        }
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<string> Headers { get; set; } = [];
+    [Parameter, EditorRequired] public IReadOnlyList<IReadOnlyList<string>> Rows { get; set; } = [];
+    [Parameter] public int StatusColumn { get; set; } = -1;
+    [Parameter] public int LinkColumn { get; set; } = -1;
+    [Parameter] public string LinkBase { get; set; } = "#";
+    [Parameter] public string CssClass { get; set; } = "";
+
+    private string ResolveHref(string value) => LinkBase == "#" ? "#" : $"{LinkBase}/{Uri.EscapeDataString(value)}";
+
+    private static string Tone(string status) => status.ToLowerInvariant() switch
+    {
+        "active" or "approved" or "completed" or "received" or "in stock" or "healthy" or "enabled" or "connected" or "paid" or "posted" => "success",
+        "low stock" or "pending" or "pending approval" or "draft" or "scheduled" or "counting" or "warning" or "partially received" or "partially shipped" => "warning",
+        "out of stock" or "failed" or "cancelled" or "overdue" or "blocked" or "expired" or "critical" => "danger",
+        "in transit" or "sent" or "processing" or "picking" or "packed" or "open" or "invited" or "running" => "info",
+        _ => "neutral"
+    };
+}

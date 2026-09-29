@@ -1,0 +1,103 @@
+@page "/inventory"
+@inject IInventoryUiService Data
+@inject UiShellService Ui
+
+<PageTitle>Inventory - P1 Inventory</PageTitle>
+
+<PageHeader Title="Inventory overview" Subtitle="Current stock positions across branches and storage areas.">
+    <Actions>
+        <button class="btn btn-secondary" @onclick="Export"><AppIcon Name="download" Size="15" /> Export</button>
+    </Actions>
+</PageHeader>
+
+<section class="kpi-grid">
+    <KpiCard Label="On hand" Value="52,214" Footer="@Ui.ActiveBranch" />
+    <KpiCard Label="Reserved" Value="3,824" Footer="7.3% of on-hand" />
+    <KpiCard Label="Available" Value="48,390" Footer="Ready to allocate" />
+    <KpiCard Label="Incoming" Value="6,240" Footer="18 open purchase orders" />
+</section>
+
+<section class="panel list-panel">
+    <div class="list-toolbar">
+        <div class="toolbar-search"><AppIcon Name="search" Size="16" /><input @bind="search" @bind:event="oninput" placeholder="Search SKU or product" /></div>
+        <button class="btn btn-secondary" @onclick="CycleStatus"><AppIcon Name="filter" Size="15" /> Filters</button>
+        <button class="btn btn-secondary" @onclick="CycleStatus">@statusFilter ⌄</button>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Branch / Storage area</th>
+                    <th class="numeric">On hand</th>
+                    <th class="numeric">Reserved</th>
+                    <th class="numeric">Available</th>
+                    <th class="numeric">Incoming</th>
+                    <th class="numeric">Preferred stock</th>
+                    <th class="numeric">Avg. cost</th>
+                    <th class="numeric">Stock value</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in FilteredInventory)
+                {
+                    <tr>
+                        <td><div class="cell-primary">@row.Product</div><div class="cell-secondary">@row.Sku</div></td>
+                        <td><div class="cell-primary">@BranchLabel(row.Warehouse)</div><div class="cell-secondary">@row.Location</div></td>
+                        <td class="numeric">@row.OnHand</td>
+                        <td class="numeric">@row.Reserved</td>
+                        <td class="numeric"><strong>@row.Available</strong></td>
+                        <td class="numeric">@row.Incoming</td>
+                        <td class="numeric">@row.ReorderPoint</td>
+                        <td class="numeric">RM @row.AverageCost.ToString("N2")</td>
+                        <td class="numeric">RM @row.StockValue.ToString("N2")</td>
+                        <td><StatusPill Text="@row.Status" Tone="@Tone(row.Status)" /></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@code {
+    private IReadOnlyList<InventoryRow> inventory = [];
+    private string search = "";
+    private string statusFilter = "All statuses";
+
+    private IEnumerable<InventoryRow> FilteredInventory => inventory.Where(row =>
+        (string.IsNullOrWhiteSpace(search) || row.Product.Contains(search, StringComparison.OrdinalIgnoreCase) || row.Sku.Contains(search, StringComparison.OrdinalIgnoreCase)) &&
+        (statusFilter == "All statuses" || row.Status == statusFilter));
+
+    protected override async Task OnInitializedAsync()
+        => inventory = await Data.GetInventoryAsync();
+
+    private void CycleStatus()
+    {
+        statusFilter = statusFilter switch
+        {
+            "All statuses" => "In Stock",
+            "In Stock" => "Low Stock",
+            "Low Stock" => "Out of Stock",
+            _ => "All statuses"
+        };
+    }
+
+    private void Export() => Ui.ShowToast("Inventory export ready", $"{FilteredInventory.Count():N0} mock inventory rows prepared as CSV.", "success");
+
+    private static string BranchLabel(string warehouse) => warehouse switch
+    {
+        var x when x.Contains("KL", StringComparison.OrdinalIgnoreCase) => "Kuala Lumpur",
+        var x when x.Contains("PJ", StringComparison.OrdinalIgnoreCase) => "Petaling Jaya",
+        var x when x.Contains("Johor", StringComparison.OrdinalIgnoreCase) => "Johor Bahru",
+        _ => warehouse
+    };
+
+    private static string Tone(string status) => status switch
+    {
+        "In Stock" => "success",
+        "Low Stock" => "warning",
+        "Out of Stock" => "danger",
+        _ => "neutral"
+    };
+}

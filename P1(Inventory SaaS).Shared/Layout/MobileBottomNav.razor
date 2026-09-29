@@ -1,0 +1,24 @@
+@inject UiShellService Ui
+
+<nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+    <a href="/" class="mobile-nav-item">
+        <AppIcon Name="grid" Size="20" />
+        <span>Home</span>
+    </a>
+    <a href="/products" class="mobile-nav-item">
+        <AppIcon Name="box" Size="20" />
+        <span>Products</span>
+    </a>
+    <button type="button" class="mobile-scan-button" @onclick="() => Ui.SetScanner(true)" aria-label="Scan barcode">
+        <span class="scan-ring"><span>⌗</span></span>
+        <small>Scan</small>
+    </button>
+    <a href="/inventory" class="mobile-nav-item">
+        <AppIcon Name="layers" Size="20" />
+        <span>Inventory</span>
+    </a>
+    <a href="/quick-create" class="mobile-nav-item">
+        <AppIcon Name="plus" Size="20" />
+        <span>Create</span>
+    </a>
+</nav>

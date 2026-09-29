@@ -1,0 +1,57 @@
+<div class="touch-date-field">
+    <span class="touch-field-label">@Label</span>
+    <button type="button" class="touch-select-trigger" @onclick="OpenSheet">
+        <span>@Value.ToString("dd MMM yyyy")</span><span>▣</span>
+    </button>
+</div>
+
+@if (sheetOpen)
+{
+    <div class="touch-sheet-backdrop" @onclick="CloseSheet">
+        <section class="touch-date-sheet" role="dialog" aria-modal="true" aria-label="@Label" @onclick:stopPropagation>
+            <div class="touch-sheet-handle"></div>
+            <header class="touch-picker-head">
+                <div><span class="touch-kicker">DATE</span><h2>@Label</h2></div>
+                <button type="button" class="touch-sheet-close" @onclick="CloseSheet">×</button>
+            </header>
+
+            <div class="touch-date-display">@draft.ToString("dddd, dd MMMM yyyy")</div>
+            <div class="touch-date-quick">
+                <button type="button" @onclick="SetToday">Today</button>
+                <button type="button" @onclick="SetTomorrow">Tomorrow</button>
+                <button type="button" @onclick="AddSevenDays">+7 days</button>
+                <button type="button" @onclick="AddThirtyDays">+30 days</button>
+            </div>
+            <div class="touch-date-stepper">
+                <button type="button" @onclick="PreviousDay">− 1 day</button>
+                <input type="date" value="@DraftInputValue" @onchange="OnNativeChange" />
+                <button type="button" @onclick="NextDay">+ 1 day</button>
+            </div>
+            <div class="touch-calculator-actions">
+                <button type="button" class="btn btn-secondary" @onclick="CloseSheet">Cancel</button>
+                <button type="button" class="btn btn-primary" @onclick="ApplyAsync">Use @draft.ToString("dd MMM")</button>
+            </div>
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter] public string Label { get; set; } = "Date";
+    [Parameter] public DateTime Value { get; set; } = DateTime.Today;
+    [Parameter] public EventCallback<DateTime> ValueChanged { get; set; }
+
+    private bool sheetOpen;
+    private DateTime draft;
+    private string DraftInputValue => draft.ToString("yyyy-MM-dd");
+
+    private void OpenSheet() { draft = Value.Date; sheetOpen = true; }
+    private void CloseSheet() => sheetOpen = false;
+    private void SetToday() => draft = DateTime.Today;
+    private void SetTomorrow() => draft = DateTime.Today.AddDays(1);
+    private void PreviousDay() => draft = draft.AddDays(-1);
+    private void NextDay() => draft = draft.AddDays(1);
+    private void AddSevenDays() => draft = draft.AddDays(7);
+    private void AddThirtyDays() => draft = draft.AddDays(30);
+    private void OnNativeChange(ChangeEventArgs e) { if (DateTime.TryParse(e.Value?.ToString(), out var date)) draft = date.Date; }
+    private async Task ApplyAsync() { Value = draft.Date; sheetOpen = false; await ValueChanged.InvokeAsync(Value); }
+}

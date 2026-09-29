@@ -1,0 +1,21 @@
+@page "/sales-orders"
+
+<PageTitle>Sales Orders - P1 Inventory</PageTitle>
+<PageHeader Title="Sales Orders" Subtitle="Allocate inventory and coordinate fulfilment.">
+    <Actions><a class="btn btn-primary" href="#"><AppIcon Name="plus" Size="15" /> New sales order</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search sales orders" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="6" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Order", "Customer", "Warehouse", "Items", "Total", "Required", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["SO-009283", "Retail Hub Sdn Bhd", "Penang", "4", "RM 2,420", "15 Sep", "Picking"],
+        ["SO-009282", "FitWorks MY", "PJ Warehouse", "8", "RM 6,880", "16 Sep", "Approved"],
+        ["SO-009281", "OfficeMart", "KL Central", "3", "RM 1,920", "14 Sep", "Partially Shipped"]
+    ];
+}

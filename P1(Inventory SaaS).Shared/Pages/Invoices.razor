@@ -1,0 +1,21 @@
+@page "/billing/invoices"
+
+<PageTitle>Invoices - P1 Inventory</PageTitle>
+<PageHeader Title="Invoices" Subtitle="View and download subscription invoices.">
+    <Actions></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search invoices" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="5" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Invoice", "Period", "Issued", "Amount", "Payment method", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["INV-2026-009", "Sep 2026", "01 Sep", "RM 299.00", "Visa \u2022\u2022\u2022\u2022 4242", "Paid"],
+        ["INV-2026-008", "Aug 2026", "01 Aug", "RM 299.00", "Visa \u2022\u2022\u2022\u2022 4242", "Paid"],
+        ["INV-2026-007", "Jul 2026", "01 Jul", "RM 299.00", "Visa \u2022\u2022\u2022\u2022 4242", "Paid"]
+    ];
+}

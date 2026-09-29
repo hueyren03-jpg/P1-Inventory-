@@ -1,0 +1,222 @@
+@page "/"
+@inject IInventoryUiService Data
+@inject UiShellService Ui
+@inject NavigationManager Navigation
+
+<PageTitle>Dashboard - P1 Inventory</PageTitle>
+
+<PageHeader Title="Dashboard"
+            Subtitle="Inventory operations across all active branches.">
+    <Actions>
+        <button class="btn btn-secondary" type="button" @onclick="RefreshDashboard">Refresh</button>
+    </Actions>
+</PageHeader>
+
+@if (summary is null)
+{
+    <div class="skeleton-grid">
+        @for (var i = 0; i < 4; i++)
+        {
+            <div class="skeleton-card"></div>
+        }
+    </div>
+}
+else
+{
+    <section class="kpi-grid">
+        <KpiCard Label="Inventory value" AnimateTo="@summary.InventoryValue" Prefix="RM " Badge="+4.8%" BadgeTone="success" Footer="Across 4 branches" Trend="inventoryTrend" OnClick="OpenReports" Hint="Open inventory reports" />
+        <KpiCard Label="Total SKUs" AnimateTo="@summary.TotalSkus" Badge="@($"{summary.LowStock} low")" BadgeTone="warning" Footer="126 require attention" Trend="skuTrend" OnClick="OpenProducts" Hint="Open products" />
+        <KpiCard Label="Available units" AnimateTo="@summary.AvailableUnits" Badge="+2.1%" BadgeTone="success" Footer="Ready for stock operations" Trend="availableTrend" OnClick="OpenBalance" Hint="Open stock balance" />
+        <KpiCard Label="Incoming units" AnimateTo="@summary.IncomingUnits" Badge="18 POs" BadgeTone="info" Footer="Expected this week" Trend="incomingTrend" OnClick="OpenPurchaseOrders" Hint="Open purchase orders" />
+    </section>
+
+    <section class="dashboard-grid">
+        <article class="panel chart-panel">
+            <div class="panel-header">
+                <div><h2>Stock movement</h2><p>Stock in vs stock out · click a day to drill down</p></div>
+                <div class="range-switcher">
+                    @foreach (var range in ranges)
+                    {
+                        <button type="button" class="@(selectedRange == range ? "active" : "")" @onclick="() => ChangeRange(range)">@range</button>
+                    }
+                </div>
+            </div>
+            <div class="chart-legend">
+                <span><i class="legend-dot blue"></i> Stock in</span>
+                <span><i class="legend-dot dark"></i> Stock out</span>
+            </div>
+            <div class="bar-chart">
+                @foreach (var day in chart)
+                {
+                    <button type="button" class="bar-column chart-drill" @onclick="() => DrillChart(day.Day, day.In, day.Out)" aria-label="Open @day.Day stock movements">
+                        <div class="chart-tooltip">
+                            <strong>@day.Day · @selectedRange</strong>
+                            <span><b>Stock in</b><b>@day.In</b></span>
+                            <span><b>Stock out</b><b>@day.Out</b></span>
+                            <span><b>Net</b><b>@(day.In - day.Out >= 0 ? "+" : "")@(day.In - day.Out)</b></span>
+                            <em>Click to open movements</em>
+                        </div>
+                        <div class="bars">
+                            <span class="bar in" style="@($"height:{day.In}px")"></span>
+                            <span class="bar out" style="@($"height:{day.Out}px")"></span>
+                        </div>
+                        <small>@day.Day</small>
+                    </button>
+                }
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header"><div><h2>Stock health</h2><p>SKU availability</p></div></div>
+            <div class="health-list">
+                <HealthRow Label="Healthy" Count="8,314" Percent="96.2" Tone="healthy" />
+                <HealthRow Label="Low stock" Count="126" Percent="1.5" Tone="warning" />
+                <HealthRow Label="Out of stock" Count="39" Percent="0.5" Tone="danger" />
+                <HealthRow Label="Overstocked" Count="163" Percent="1.8" Tone="info" />
+            </div>
+        </article>
+
+        <article class="panel alert-panel">
+            <div class="panel-header">
+                <div><h2>Operational alerts</h2><p>Items that need attention</p></div>
+                <a href="/automation/alerts">View all</a>
+            </div>
+            <div class="alert-list">
+                <button type="button" class="alert-row-button" @onclick="AckOutOfStock"><AlertItem Tone="danger" Title="39 SKUs are out of stock" Detail="7 have open customer orders" /></button>
+                <button type="button" class="alert-row-button" @onclick="AckLowStock"><AlertItem Tone="warning" Title="126 SKUs are below preferred stock levels" Detail="Review purchasing or branch transfers" /></button>
+                <button type="button" class="alert-row-button" @onclick="AckExpiring"><AlertItem Tone="warning" Title="14 products expire within 30 days" Detail="RM 8,420 estimated stock value" /></button>
+                <button type="button" class="alert-row-button" @onclick="AckIncoming"><AlertItem Tone="info" Title="5 purchase orders arrive today" Detail="1,840 incoming units" /></button>
+            </div>
+        </article>
+
+        <article class="panel activity-panel">
+            <div class="panel-header">
+                <div><h2>Live activity</h2><p>Latest operational events</p></div>
+                <a href="/activity">Full activity</a>
+            </div>
+            <div class="activity-timeline">
+                @foreach (var item in activity)
+                {
+                    <div class="timeline-item">
+                        <span class="timeline-dot"></span>
+                        <div class="timeline-copy"><strong>@item.Title</strong><span>@item.Detail · @item.Time</span></div>
+                    </div>
+                }
+            </div>
+        </article>
+    </section>
+
+    <section class="panel recent-panel">
+        <div class="panel-header">
+            <div><h2>Recent stock movements</h2><p>Latest posted inventory transactions</p></div>
+            <a href="/stock-movements">View all movements</a>
+        </div>
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Product</th>
+                        <th>Branch</th>
+                        <th>Type</th>
+                        <th class="numeric">Qty</th>
+                        <th>User</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in movements)
+                    {
+                        <tr>
+                            <td><button type="button" class="record-link record-button" @onclick="() => SelectMovement(row)">@row.Reference</button></td>
+                            <td><div class="cell-primary">@row.Product</div><div class="cell-secondary">@row.Sku</div></td>
+                            <td>@BranchLabel(row.Warehouse)</td>
+                            <td><StatusPill Text="@row.Type" Tone="@MovementTone(row.Type)" /></td>
+                            <td class="numeric @(row.Quantity >= 0 ? "positive" : "negative")">@(row.Quantity >= 0 ? "+" : "")@row.Quantity</td>
+                            <td>@row.User</td>
+                            <td>@row.OccurredAt.ToString("h:mm tt")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
+
+@code {
+    private DashboardSummary? summary;
+    private IReadOnlyList<StockMovementRow> movements = [];
+    private string selectedRange = "7D";
+    private readonly string[] ranges = ["7D", "30D", "90D", "1Y"];
+    private readonly int[] inventoryTrend = [62, 65, 63, 69, 72, 75, 79, 81, 84, 88];
+    private readonly int[] skuTrend = [48, 50, 53, 52, 57, 59, 61, 64, 66, 68];
+    private readonly int[] availableTrend = [76, 74, 77, 79, 78, 82, 84, 83, 87, 89];
+    private readonly int[] incomingTrend = [35, 44, 38, 51, 46, 58, 54, 63, 60, 68];
+    private readonly (string Day, int In, int Out)[] chart =
+    [
+        ("Mon", 118, 82), ("Tue", 142, 96), ("Wed", 104, 72), ("Thu", 158, 124),
+        ("Fri", 134, 106), ("Sat", 90, 58), ("Sun", 126, 92)
+    ];
+    private readonly (string Title, string Detail, string Time)[] activity =
+    [
+        ("Sarah posted Stock In SIN-001842", "240 USB-C hubs received", "10:42 AM"),
+        ("Daniel approved Transfer TR-001294", "KL Central → Petaling Jaya", "10:18 AM"),
+        ("Scanner S2 reached low-stock level", "12 units available", "9:54 AM"),
+        ("Purchase order PO-2026-003821 updated", "Expected in 4 days", "9:31 AM")
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        summary = await Data.GetDashboardSummaryAsync();
+        movements = await Data.GetRecentMovementsAsync();
+    }
+
+    private async Task RefreshDashboard()
+    {
+        summary = null;
+        await Task.Delay(350);
+        summary = await Data.GetDashboardSummaryAsync();
+        movements = await Data.GetRecentMovementsAsync();
+        Ui.ShowToast("Dashboard refreshed", "Latest mock inventory data is displayed.", "success");
+    }
+
+    private void ChangeRange(string range)
+    {
+        selectedRange = range;
+        Ui.ShowToast("Chart range changed", $"Stock movement is now shown for {range}.", "info");
+    }
+
+    private void DrillChart(string day, int stockIn, int stockOut)
+    {
+        Ui.ShowToast("Drill-down applied", $"{day}: {stockIn} stock in, {stockOut} stock out.", "info");
+        Navigation.NavigateTo("/stock-movements");
+    }
+
+    private void OpenReports() => Navigation.NavigateTo("/reports");
+    private void OpenProducts() => Navigation.NavigateTo("/products");
+    private void OpenBalance() => Navigation.NavigateTo("/inventory/balance");
+    private void OpenPurchaseOrders() => Navigation.NavigateTo("/purchase-orders");
+    private void AckOutOfStock() => Acknowledge("Out of stock alert reviewed");
+    private void AckLowStock() => Acknowledge("Low-stock alert reviewed");
+    private void AckExpiring() => Acknowledge("Expiring-stock alert reviewed");
+    private void AckIncoming() => Acknowledge("Incoming-stock alert reviewed");
+    private void SelectMovement(StockMovementRow row) => Ui.ShowToast("Movement selected", row.Reference, "info");
+    private void Acknowledge(string message) => Ui.ShowToast("Alert acknowledged", message, "success", "Undo", () => Ui.ShowToast("Acknowledgement reverted", "The alert is active again.", "info"));
+
+    private static string BranchLabel(string warehouse) => warehouse switch
+    {
+        var x when x.Contains("KL", StringComparison.OrdinalIgnoreCase) => "Kuala Lumpur",
+        var x when x.Contains("PJ", StringComparison.OrdinalIgnoreCase) => "Petaling Jaya",
+        var x when x.Contains("Johor", StringComparison.OrdinalIgnoreCase) => "Johor Bahru",
+        _ => warehouse
+    };
+
+    private static string MovementTone(string type) => type switch
+    {
+        "Stock In" => "success",
+        "Stock Out" => "danger",
+        "Adjustment" => "warning",
+        _ => "info"
+    };
+}

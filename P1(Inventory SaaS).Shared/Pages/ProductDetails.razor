@@ -1,0 +1,94 @@
+@page "/products/{Id}"
+@inject IInventoryUiService Data
+@inject UiShellService Ui
+
+<PageTitle>Product - P1 Inventory</PageTitle>
+
+<div class="breadcrumb"><a href="/products">Products</a><span>/</span><span>@product.Name</span></div>
+
+<PageHeader Title="@product.Name" Subtitle="@($"SKU {product.Sku} · {product.Category}")">
+    <Actions>
+        <StatusPill Text="Active" Tone="success" />
+        <button class="btn btn-secondary" @onclick="Duplicate">Duplicate</button>
+        <a class="btn btn-primary" href="@($"/products/{Id}/edit")">Edit product</a>
+    </Actions>
+</PageHeader>
+
+<section class="kpi-grid product-summary-grid">
+    <KpiCard Label="Available" Value="@product.Available.ToString("N0")" Footer="@product.Warehouse" />
+    <KpiCard Label="On hand" Value="@product.OnHand.ToString("N0")" Footer="@($"{product.Reserved:N0} reserved")" />
+    <KpiCard Label="Incoming" Value="240" Footer="PO-2026-003821" />
+    <KpiCard Label="Inventory value" Value="@($"RM {(product.OnHand * product.AverageCost):N2}")" Footer="@($"Average cost RM {product.AverageCost:N2}")" />
+</section>
+
+<section class="panel">
+    <div class="product-detail-media">
+        <div class="product-detail-image">
+            <img src="@product.ImageUrl" alt="@product.Name" />
+        </div>
+        <div class="product-detail-summary">
+            <div class="eyebrow">Product media</div>
+            <h2>@product.Name</h2>
+            <p>Primary image used throughout the catalog, stock operations and mobile scanning workflows.</p>
+            <div class="product-detail-meta">
+                <span>@product.Category</span>
+                <span>DockPro</span>
+                <span>Unit</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="tabbar">
+        @foreach (var tab in tabs)
+        {
+            <button class="tab @(activeTab == tab ? "active" : "")" @onclick="() => SelectTab(tab)">@tab</button>
+        }
+    </div>
+
+    <div class="detail-grid">
+        <div class="detail-section">
+            <h2>Product information</h2>
+            <dl class="detail-list">
+                <div><dt>Product name</dt><dd>@product.Name</dd></div>
+                <div><dt>SKU</dt><dd>@product.Sku</dd></div>
+                <div><dt>Category</dt><dd>@product.Category</dd></div>
+                <div><dt>Brand</dt><dd>DockPro</dd></div>
+                <div><dt>Base unit</dt><dd>Unit</dd></div>
+            </dl>
+        </div>
+
+        <div class="detail-section">
+            <h2>Inventory settings</h2>
+            <dl class="detail-list">
+                <div><dt>Reorder point</dt><dd>100 units</dd></div>
+                <div><dt>Reorder quantity</dt><dd>300 units</dd></div>
+                <div><dt>Tracking</dt><dd>None</dd></div>
+                <div><dt>Negative stock</dt><dd>Not allowed</dd></div>
+                <div><dt>Primary warehouse</dt><dd>@product.Warehouse</dd></div>
+            </dl>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter] public string Id { get; set; } = "";
+    private readonly string[] tabs = ["Overview", "Inventory", "Movements", "Warehouses", "Pricing", "Suppliers", "Activity"];
+    private string activeTab = "Overview";
+    private ProductRow product = new("p1", "USB-C Hub 8-in-1", "HUB-8IN1-GR", "Electronics", "KL Central", 420, 35, 385, 68.50m, 109m, "In Stock", "_content/StockPilot.Shared/images/products/hub.svg");
+
+    protected override async Task OnParametersSetAsync()
+        => product = await Data.GetProductAsync(Id) ?? product;
+
+    private void SelectTab(string tab)
+    {
+        activeTab = tab;
+        Ui.ShowToast($"{tab} selected", $"Showing mock {tab.ToLowerInvariant()} data for {product.Name}.", "info");
+    }
+
+    private async Task Duplicate()
+    {
+        var copy = await Data.DuplicateProductAsync(product.Id);
+        if (copy is not null)
+            Ui.ShowToast("Product duplicated", $"{copy.Name} · {copy.Sku}", "success");
+    }
+}

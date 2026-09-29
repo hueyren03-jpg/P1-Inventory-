@@ -1,0 +1,79 @@
+@page "/stock-out/new"
+@inject UiShellService Ui
+@inject IInventoryUiService Data
+
+<PageTitle>New Stock Out - P1 Inventory</PageTitle>
+<div class="breadcrumb"><a href="javascript:history.back()">Back</a><span>/</span><span>New Stock Out</span></div>
+<PageHeader Title="New Stock Out" Subtitle="Issue inventory with scan-first, touch-first controls." />
+
+<section class="panel form-page pos-form-page touch-workflow-page">
+    <div class="touch-workflow-steps"><span class="active">1 Branch</span><span>2 Product</span><span>3 Quantity</span><span>4 Confirm</span></div>
+
+    <FormSection Title="Issue setup" Description="Select the branch and reason with large touch sheets instead of compact dropdowns.">
+        <div class="touch-form-grid">
+            <TouchSelectField Label="Branch" @bind-Value="branch" Options="branches" />
+            <TouchDateField Label="Reference date" @bind-Value="referenceDate" />
+            <TouchSelectField Label="Reason" @bind-Value="reason" Options="reasons" />
+            <TouchSelectField Label="Department" @bind-Value="department" Options="departments" />
+        </div>
+    </FormSection>
+
+    <FormSection Title="Stock line" Description="Scan or choose the item, then use the large quantity keypad. MAX uses currently available stock.">
+        <div class="touch-form-grid">
+            <div class="span-2"><TouchProductPicker @bind-Value="product" /></div>
+            <TouchSelectField Label="Storage area" @bind-Value="storageArea" Options="storageAreas" />
+            <div class="touch-stock-snapshot"><span>Available now</span><strong>@availableStock.ToString("N0") units</strong><small>@branch · @storageArea</small></div>
+            <div class="span-2 touch-field-block">
+                <span class="touch-field-label">Quantity</span>
+                <TouchQuantityControl @bind-Value="quantity" Presets="stockOutPresets" Max="availableStock" MaxShortcut="availableStock" Label="Stock out quantity" ContextText="Enter how many units to issue. The value cannot exceed currently available stock." />
+            </div>
+        </div>
+
+        <div class="touch-transaction-summary">
+            <div><span>Product</span><strong>@product</strong></div>
+            <div><span>Before</span><strong>@availableStock</strong></div>
+            <div><span>Issue</span><strong>−@quantity</strong></div>
+            <div><span>After</span><strong>@AfterStock</strong></div>
+        </div>
+    </FormSection>
+
+    <FormSection Title="Notes" Description="Optional context for the audit trail.">
+        <div class="form-grid"><label class="span-2"><span>Notes</span><textarea rows="3" placeholder="Optional reason or supporting context"></textarea></label></div>
+    </FormSection>
+
+    <div class="form-actions pos-form-actions">
+        <a class="btn btn-secondary" href="/stock-out">Cancel</a>
+        <button class="btn btn-primary pos-primary-action" type="button" disabled="@(quantity <= 0)" @onclick="ConfirmAsync">Submit Stock Out · @quantity units</button>
+    </div>
+</section>
+
+@code {
+    private string branch = "Kuala Lumpur";
+    private string reason = "Internal usage";
+    private string department = "Operations";
+    private string product = "Thermal Label 100x150";
+    private string storageArea = "Main Floor C-04-08";
+    private DateTime referenceDate = DateTime.Today;
+    private int availableStock = 980;
+    private int quantity = 20;
+
+    private readonly IReadOnlyList<string> branches = ["Kuala Lumpur", "Petaling Jaya", "Penang", "Johor Bahru"];
+    private readonly IReadOnlyList<string> reasons = ["Internal usage", "Damaged stock", "Customer issue", "Marketing sample", "Other issue"];
+    private readonly IReadOnlyList<string> departments = ["Operations", "Sales", "Admin", "Service", "Marketing"];
+    private readonly IReadOnlyList<string> storageAreas = ["Main Floor C-04-08", "Back Room", "Dispatch Area"];
+    private readonly IReadOnlyList<int> stockOutPresets = [1, 5, 10, 20, 50];
+
+    private int AfterStock => Math.Max(0, availableStock - quantity);
+
+    private async Task ConfirmAsync()
+    {
+        if (quantity <= 0) return;
+        var confirmed = await Ui.ConfirmAsync("Post stock out?", $"Issue {quantity:N0} units of {product} from {branch}. Stock will change from {availableStock:N0} to {AfterStock:N0}.", "Post stock out", "warning");
+        if (!confirmed) return;
+
+        var movement = await Data.PostStockTransactionAsync(new StockTransactionDraft(
+            "Stock Out", product, "", branch, storageArea, -quantity, 0));
+        availableStock = Math.Max(0, availableStock + movement.Quantity);
+        Ui.ShowToast("Stock issued", $"{movement.Reference} · {Math.Abs(movement.Quantity):N0} units of {product} issued from {branch}.", "success", "Issue another", () => Ui.ShowToast("Ready for next item", "Branch and reason have been kept for fast repeat entry.", "info"));
+    }
+}

@@ -1,0 +1,22 @@
+@page "/uom"
+
+<PageTitle>Units of Measure - P1 Inventory</PageTitle>
+<PageHeader Title="Units of Measure" Subtitle="Standardize quantities across products and purchasing.">
+    <Actions><a class="btn btn-primary" href="#"><AppIcon Name="plus" Size="15" /> Add unit</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search units of measure" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="4" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Unit", "Symbol", "Type", "Products", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["Unit", "ea", "Quantity", "4,820", "Active"],
+        ["Carton", "ctn", "Packaging", "1,284", "Active"],
+        ["Kilogram", "kg", "Weight", "382", "Active"],
+        ["Meter", "m", "Length", "210", "Active"]
+    ];
+}

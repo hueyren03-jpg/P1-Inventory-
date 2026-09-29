@@ -1,0 +1,20 @@
+@page "/sales-returns"
+
+<PageTitle>Sales Returns - P1 Inventory</PageTitle>
+<PageHeader Title="Sales Returns" Subtitle="Inspect returned goods and decide restock or disposal.">
+    <Actions><a class="btn btn-primary" href="#"><AppIcon Name="plus" Size="15" /> New sales return</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search sales returns" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="6" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Return", "Order", "Customer", "Warehouse", "Qty", "Reason", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["SR-000241", "SO-009120", "FitWorks MY", "PJ Warehouse", "2", "Wrong size", "Received"],
+        ["SR-000240", "SO-009101", "OfficeMart", "KL Central", "1", "Damaged", "Pending"]
+    ];
+}

@@ -1,0 +1,21 @@
+@page "/grn"
+
+<PageTitle>Goods Receipts (GRN) - P1 Inventory</PageTitle>
+<PageHeader Title="Goods Receipts (GRN)" Subtitle="Receive purchase orders and update stock through controlled receipts.">
+    <Actions><a class="btn btn-primary" href="/grn/new"><AppIcon Name="plus" Size="15" /> Receive purchase order</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search goods receipts (grn)" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="6" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["GRN", "Purchase order", "Supplier", "Warehouse", "Received", "Lines", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["GRN-004821", "PO-2026-003817", "TechSource Distribution", "KL Central", "14 Sep 10:42 AM", "4", "Posted"],
+        ["GRN-004820", "PO-2026-003816", "PackPro Supplies", "Johor", "13 Sep 4:18 PM", "3", "Posted"],
+        ["GRN-004819", "PO-2026-003819", "Northern Labels", "Penang", "13 Sep 11:20 AM", "2", "Partially Received"]
+    ];
+}

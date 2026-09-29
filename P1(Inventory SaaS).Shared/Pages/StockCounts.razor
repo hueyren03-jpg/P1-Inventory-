@@ -1,0 +1,21 @@
+@page "/stock-counts"
+
+<PageTitle>Stock Counts - P1 Inventory</PageTitle>
+<PageHeader Title="Stock Counts" Subtitle="Plan full counts and cycle counts with variance review.">
+    <Actions><a class="btn btn-primary" href="/stock-counts/new"><AppIcon Name="plus" Size="15" /> New stock count</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search stock counts" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="6" LinkColumn="0" LinkBase="/stock-counts" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Count", "Warehouse", "Scope", "Scheduled", "Progress", "Variance", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["CNT-00241", "KL Central", "Zone A", "14 Sep 2026", "82%", "RM 420", "Counting"],
+        ["CNT-00240", "Penang", "All locations", "13 Sep 2026", "100%", "RM 95", "Completed"],
+        ["CNT-00239", "PJ Warehouse", "High value SKUs", "15 Sep 2026", "0%", "\u2014", "Scheduled"]
+    ];
+}

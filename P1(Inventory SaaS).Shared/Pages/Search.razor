@@ -1,0 +1,14 @@
+@page "/search"
+@inject UiShellService Ui
+<PageTitle>Search - P1 Inventory</PageTitle><PageHeader Title="Global search" Subtitle="Find products, SKUs, orders, suppliers and inventory documents." />
+<section class="search-page"><div class="search-large"><AppIcon Name="search" Size="20"/><input autofocus @bind="query" @bind:event="oninput" placeholder="Search P1 Inventory..."/><kbd>Esc</kbd></div><div class="search-filters">@foreach (var filter in filters) { <button class="filter-chip @(activeFilter == filter ? "active" : "")" @onclick="() => SelectFilter(filter)">@filter</button> }</div><div class="search-results">@if (ShowProduct) { <div class="search-group"><h3>Products</h3><a href="/products/p1"><span class="product-thumb">U</span><div><strong>USB-C Hub 8-in-1</strong><small>HUB-8IN1-GR · 385 available</small></div><kbd>↵</kbd></a></div> } @if (ShowDocuments) { <div class="search-group"><h3>Documents</h3>@if (Matches("PO-2026-003821 TechSource Distribution")) { <a href="/purchase-orders/PO-2026-003821"><span class="search-type">PO</span><div><strong>PO-2026-003821</strong><small>TechSource Distribution · RM 48,650</small></div></a> } @if (Matches("TR-001294 KL Central PJ Warehouse")) { <a href="/transfers/TR-001294"><span class="search-type">TR</span><div><strong>TR-001294</strong><small>KL Central → PJ Warehouse · In Transit</small></div></a> }</div> } @if (!ShowProduct && !ShowDocuments) { <EmptyState Title="No matching mock records" Message="Try another term or choose All." Icon="search" /> }</div></section>
+
+@code {
+    private readonly string[] filters = ["All", "Products", "Inventory", "Purchasing", "Sales", "Partners"];
+    private string activeFilter = "All";
+    private string query = "";
+    private bool ShowProduct => (activeFilter is "All" or "Products" or "Inventory") && Matches("USB-C Hub 8-in-1 HUB-8IN1-GR");
+    private bool ShowDocuments => (activeFilter is "All" or "Purchasing") && (Matches("PO-2026-003821 TechSource Distribution") || Matches("TR-001294 KL Central PJ Warehouse"));
+    private bool Matches(string value) => string.IsNullOrWhiteSpace(query) || value.Contains(query, StringComparison.OrdinalIgnoreCase);
+    private void SelectFilter(string filter) { activeFilter = filter; Ui.ShowToast("Search filter applied", filter, "info"); }
+}

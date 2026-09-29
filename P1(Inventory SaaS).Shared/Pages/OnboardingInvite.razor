@@ -1,0 +1,21 @@
+@page "/onboarding/invite"
+@layout P1_Inventory_SaaS_.Shared.Layout.AuthLayout
+@inject UiShellService Ui
+<PageTitle>Invite team - P1 Inventory</PageTitle><section class="auth-card onboarding-card"><div class="onboarding-progress"><span class="done">✓</span><i class="done"></i><span class="done">✓</span><i class="done"></i><span class="active">3</span></div><div class="auth-card-head"><h1>Invite your team</h1><p>Add teammates now or skip and do it later.</p></div><div class="invite-row"><input type="email" @bind="email" placeholder="teammate@company.com"/><select @bind="role"><option>Warehouse Staff</option><option>Inventory Manager</option><option>Warehouse Manager</option><option>Auditor</option></select><button class="btn btn-secondary" disabled="@string.IsNullOrWhiteSpace(email)" @onclick="AddInvite">Add</button></div><div class="invite-list">@foreach (var invite in invites) { <div><span class="avatar small">@Initials(invite.Email)</span><span><strong>@invite.Email</strong><small>@invite.Role</small></span><button @onclick="() => RemoveInvite(invite)">×</button></div> }</div><a class="btn btn-primary auth-submit" href="/">Finish setup</a><a class="auth-skip" href="/">Skip for now</a></section>
+
+@code {
+    private string email = "";
+    private string role = "Warehouse Staff";
+    private readonly List<TeamInvite> invites = [new("sarah@example.com", "Inventory Manager")];
+
+    private void AddInvite()
+    {
+        if (string.IsNullOrWhiteSpace(email)) return;
+        invites.Add(new TeamInvite(email.Trim(), role));
+        Ui.ShowToast("Invitation added", $"{email.Trim()} · {role}", "success");
+        email = "";
+    }
+    private void RemoveInvite(TeamInvite invite) { invites.Remove(invite); Ui.ShowToast("Invitation removed", invite.Email, "info"); }
+    private static string Initials(string value) => string.Concat(value.Split('@')[0].Split('.', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(x => char.ToUpperInvariant(x[0])));
+    private sealed record TeamInvite(string Email, string Role);
+}

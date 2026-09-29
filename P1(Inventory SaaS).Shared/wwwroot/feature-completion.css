@@ -1,0 +1,151 @@
+/* Final support styles for comprehensive interaction features */
+
+.column-chooser {
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px 14px;
+    padding:10px 16px;
+    border-top:1px solid #edf0f4;
+    border-bottom:1px solid #edf0f4;
+    background:#fbfcfe;
+}
+.column-chooser > span { font-size:10px; font-weight:700; color:#475467; margin-right:4px; }
+.column-chooser label { display:inline-flex; align-items:center; gap:6px; font-size:10px; color:var(--muted); cursor:pointer; }
+
+.data-table th.resizable {
+    min-width:88px;
+    resize:horizontal;
+    overflow:hidden;
+}
+.data-table th:first-of-type { min-width:auto; }
+.page-size {
+    height:31px;
+    padding:0 8px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:#fff;
+    font:inherit;
+    font-size:10px;
+    color:var(--muted);
+}
+.page-number { display:inline-flex; align-items:center; padding:0 5px; color:var(--muted); font-size:10px; }
+
+.record-button {
+    border:0;
+    padding:0;
+    background:transparent;
+    font:inherit;
+    text-align:left;
+    cursor:pointer;
+}
+.product-thumb-button {
+    display:block;
+    border:0;
+    padding:0;
+    background:transparent;
+    cursor:zoom-in;
+}
+.product-thumb-button img { transition:transform .18s ease, filter .18s ease; }
+.product-thumb-button:hover img { transform:scale(1.06); filter:saturate(1.05); }
+
+.product-preview-button {
+    position:relative;
+    width:100%;
+    height:100%;
+    border:0;
+    padding:0;
+    background:transparent;
+    cursor:zoom-in;
+    overflow:hidden;
+    border-radius:inherit;
+}
+.product-preview-button img { width:100%; height:100%; object-fit:cover; display:block; }
+.product-preview-button span {
+    position:absolute;
+    left:50%;
+    bottom:7px;
+    transform:translate(-50%,4px);
+    padding:4px 7px;
+    border-radius:6px;
+    background:rgba(15,23,42,.78);
+    color:#fff;
+    font-size:9px;
+    opacity:0;
+    transition:.15s ease;
+    white-space:nowrap;
+}
+.product-preview-button:hover span { opacity:1; transform:translate(-50%,0); }
+
+.alert-row-button {
+    display:block;
+    width:100%;
+    border:0;
+    padding:0;
+    background:transparent;
+    color:inherit;
+    font:inherit;
+    text-align:left;
+    cursor:pointer;
+    border-radius:10px;
+}
+.alert-row-button:hover { background:#fbfcff; }
+.alert-row-button:active { transform:scale(.995); }
+
+.status-pill {
+    animation:p1-status-set .24s var(--fade-ease) both;
+    transition:transform .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+.status-pill:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(15,23,42,.07); }
+
+.save-state.dirty { color:#b45309; }
+.form-actions { gap:9px; }
+.form-actions .save-state { margin-right:auto; }
+
+.import-review-actions {
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:14px;
+    padding-top:12px;
+    border-top:1px solid #edf0f4;
+}
+
+.activity-panel .activity-timeline { padding:0 2px; }
+.chart-tooltip b { font-weight:600; color:#475467; }
+
+.context-menu { transform-origin:top right; }
+.data-table tbody tr:nth-last-child(-n+2) .context-menu {
+    top:auto;
+    bottom:calc(100% + 5px);
+    transform-origin:bottom right;
+}
+.table-action { transition:transform .14s ease, background-color .14s ease; }
+.table-action:active { transform:scale(.92); }
+
+.bulk-bar .btn { min-height:30px; }
+
+.filter-panel input[type="checkbox"],
+.column-chooser input[type="checkbox"],
+.table-select input[type="checkbox"] { accent-color:#2563eb; }
+
+/* Do not use will-change: transform on panels/cards. It creates unnecessary
+   stacking/containing contexts and can trap fixed POS sheets inside a form. */
+
+@keyframes p1-status-set {
+    from { opacity:.45; transform:scale(.94); }
+    to { opacity:1; transform:none; }
+}
+
+@media (max-width: 720px) {
+    .column-chooser { gap:8px 12px; }
+    .density-toggle { display:none; }
+    .bulk-bar { margin-inline:10px; overflow:auto; }
+    .saved-views { overflow:auto; flex-wrap:nowrap; padding-bottom:10px; }
+    .view-chip { white-space:nowrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .status-pill { animation:none !important; }
+    .product-thumb-button:hover img { transform:none; }
+}

@@ -1,0 +1,58 @@
+@page "/stock-counts/new"
+@inject UiShellService Ui
+@inject NavigationManager Navigation
+
+<PageTitle>New Stock Count - P1 Inventory</PageTitle>
+<div class="breadcrumb"><a href="javascript:history.back()">Back</a><span>/</span><span>New Stock Count</span></div>
+<PageHeader Title="New Stock Count" Subtitle="Schedule a count with large touch selectors and a clear counting policy." />
+
+<section class="panel form-page pos-form-page touch-workflow-page">
+    <FormSection Title="Count setup" Description="Choose branch, scope and team with large searchable touch sheets.">
+        <div class="touch-form-grid">
+            <TouchSelectField Label="Branch" @bind-Value="branch" Options="branches" />
+            <TouchSelectField Label="Count type" @bind-Value="countType" Options="countTypes" Searchable="false" />
+            <TouchSelectField Label="Scope" @bind-Value="scope" Options="scopes" />
+            <TouchDateField Label="Scheduled date" @bind-Value="scheduledDate" />
+            <TouchSelectField Label="Assigned team" @bind-Value="team" Options="teams" />
+        </div>
+    </FormSection>
+
+    <FormSection Title="Counting policy" Description="Large toggle cards make the important counting rules obvious on a touchscreen.">
+        <div class="touch-policy-grid">
+            <label class="toggle-field touch-toggle-card"><span><strong>Blind count</strong><small>Hide expected quantity from counters</small></span><input type="checkbox" @bind="blindCount" /></label>
+            <label class="toggle-field touch-toggle-card"><span><strong>Require recount on variance</strong><small>Automatically flag material variances</small></span><input type="checkbox" @bind="requireRecount" /></label>
+        </div>
+    </FormSection>
+
+    <div class="touch-count-preview">
+        <strong>Ready to schedule</strong>
+        <span>@branch · @scope · @team</span>
+        <span>@scheduledDate.ToString("dd MMM yyyy") · @(blindCount ? "Blind count" : "Expected quantities visible")</span>
+    </div>
+
+    <div class="form-actions pos-form-actions">
+        <a class="btn btn-secondary" href="/stock-counts">Cancel</a>
+        <button class="btn btn-primary pos-primary-action" type="button" @onclick="Schedule">Schedule count</button>
+    </div>
+</section>
+
+@code {
+    private string branch = "Kuala Lumpur";
+    private string countType = "Cycle count";
+    private string scope = "Zone A";
+    private string team = "KL Count Team";
+    private DateTime scheduledDate = DateTime.Today;
+    private bool blindCount = true;
+    private bool requireRecount = true;
+
+    private readonly IReadOnlyList<string> branches = ["Kuala Lumpur", "Petaling Jaya", "Penang", "Johor Bahru"];
+    private readonly IReadOnlyList<string> countTypes = ["Cycle count", "Full count", "Spot count"];
+    private readonly IReadOnlyList<string> scopes = ["Zone A", "Zone B", "High-value SKUs", "All storage areas"];
+    private readonly IReadOnlyList<string> teams = ["KL Count Team", "Operations Team", "Supervisors", "Ad-hoc Team"];
+
+    private void Schedule()
+    {
+        Ui.ShowToast("Stock count scheduled", $"CNT-MOCK · {scope} · {branch} · {scheduledDate:dd MMM}", "success");
+        Navigation.NavigateTo("/stock-counts/CNT-MOCK");
+    }
+}

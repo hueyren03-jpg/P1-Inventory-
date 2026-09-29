@@ -1,0 +1,21 @@
+@page "/stock-out"
+
+<PageTitle>Stock Out - P1 Inventory</PageTitle>
+<PageHeader Title="Stock Out" Subtitle="Issue stock for internal use, damage and other controlled reasons.">
+    <Actions><a class="btn btn-primary" href="/stock-out/new"><AppIcon Name="plus" Size="15" /> New stock out</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search stock out" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="7" LinkColumn="0" LinkBase="/stock-out" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Reference", "Warehouse", "Reason", "Lines", "Qty", "Created by", "Date", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["SOUT-001104", "Penang", "Internal usage", "3", "120", "Marcus Lee", "14 Sep", "Approved"],
+        ["SOUT-001103", "KL Central", "Damaged stock", "1", "3", "Aina Yusuf", "13 Sep", "Posted"],
+        ["SOUT-001102", "PJ Warehouse", "Marketing sample", "4", "24", "Daniel Tan", "12 Sep", "Posted"]
+    ];
+}

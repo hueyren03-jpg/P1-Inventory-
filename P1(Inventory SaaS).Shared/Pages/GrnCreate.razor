@@ -1,0 +1,103 @@
+@page "/grn/new"
+@inject UiShellService Ui
+@inject IInventoryUiService Data
+
+<PageTitle>Receive Purchase Order - P1 Inventory</PageTitle>
+<div class="breadcrumb"><a href="javascript:history.back()">Back</a><span>/</span><span>Receive Purchase Order</span></div>
+<PageHeader Title="Receive Purchase Order" Subtitle="Receive supplier deliveries with fast touch controls and one-tap quantity shortcuts." />
+
+<section class="panel form-page pos-form-page touch-workflow-page">
+    <div class="touch-workflow-steps"><span class="active">1 PO</span><span>2 Product</span><span>3 Receive</span><span>4 Post</span></div>
+
+    <FormSection Title="Receipt details" Description="Choose the purchase order and receiving branch with large touch sheets.">
+        <div class="touch-form-grid">
+            <TouchSelectField Label="Purchase order" @bind-Value="purchaseOrder" Options="purchaseOrders" />
+            <TouchSelectField Label="Receiving branch" @bind-Value="branch" Options="branches" />
+            <TouchDateField Label="Received date" @bind-Value="receivedDate" />
+            <label class="touch-text-field"><span class="touch-field-label">Supplier delivery note</span><input type="text" placeholder="Delivery note / docket" /></label>
+        </div>
+    </FormSection>
+
+    <FormSection Title="Received line" Description="Use Receive All for complete deliveries, or tap the quantity to enter a partial receipt.">
+        <div class="touch-form-grid">
+            <div class="span-2"><TouchProductPicker @bind-Value="product" /></div>
+            <TouchSelectField Label="Storage area" @bind-Value="storageArea" Options="storageAreas" />
+            <div class="touch-stock-snapshot"><span>Remaining to receive</span><strong>@Remaining units</strong><small>Ordered @ordered · previously @previouslyReceived</small></div>
+            <div class="span-2 touch-receive-summary">
+                <div><span>Ordered</span><strong>@ordered</strong></div>
+                <div><span>Previously received</span><strong>@previouslyReceived</strong></div>
+                <div><span>Remaining</span><strong>@Remaining</strong></div>
+                <button type="button" class="btn btn-primary" @onclick="ReceiveAll">Receive all @Remaining</button>
+            </div>
+            <div class="span-2 touch-field-block">
+                <span class="touch-field-label">Receive now</span>
+                <TouchQuantityControl @bind-Value="receiveNow" Presets="receivePresets" Max="Remaining" MaxShortcut="Remaining" Label="Receive now" ContextText="Enter the delivered quantity. MAX receives the complete remaining purchase-order quantity." />
+            </div>
+        </div>
+
+        @if (ShortQuantity > 0)
+        {
+            <div class="touch-exception-card">
+                <strong>@ShortQuantity units not received</strong>
+                <span>Choose a reason if this is a short or exception delivery.</span>
+                <div class="touch-exception-actions">
+                    <button type="button" class="@(exceptionReason == "Short delivery" ? "active" : "")" @onclick="SetShortDelivery">Short delivery</button>
+                    <button type="button" class="@(exceptionReason == "Damaged" ? "active" : "")" @onclick="SetDamaged">Damaged</button>
+                    <button type="button" class="@(exceptionReason == "Backordered" ? "active" : "")" @onclick="SetBackordered">Backordered</button>
+                </div>
+            </div>
+            @if (string.IsNullOrWhiteSpace(exceptionReason))
+            {
+                <div class="touch-inline-error"><strong>!</strong><span>Select a reason for the @ShortQuantity-unit short receipt before posting.</span></div>
+            }
+        }
+    </FormSection>
+
+    <FormSection Title="Quality & notes" Description="Only record exceptions when necessary.">
+        <div class="form-grid"><label class="span-2"><span>Receipt notes</span><textarea rows="3" placeholder="Damaged / short / over-delivery notes"></textarea></label></div>
+    </FormSection>
+
+    <div class="form-actions pos-form-actions">
+        <a class="btn btn-secondary" href="/grn">Cancel</a>
+        <button class="btn btn-primary pos-primary-action" type="button" disabled="@CannotPost" @onclick="PostAsync">Post GRN · @receiveNow units</button>
+    </div>
+</section>
+
+@code {
+    private string purchaseOrder = "PO-2026-003821";
+    private string branch = "Kuala Lumpur";
+    private string product = "USB-C Hub 8-in-1";
+    private string storageArea = "Receiving Area";
+    private string exceptionReason = "";
+    private DateTime receivedDate = DateTime.Today;
+    private int ordered = 300;
+    private int previouslyReceived = 0;
+    private int receiveNow = 300;
+
+    private readonly IReadOnlyList<string> purchaseOrders = ["PO-2026-003821", "PO-2026-003820", "PO-2026-003819"];
+    private readonly IReadOnlyList<string> branches = ["Kuala Lumpur", "Petaling Jaya", "Penang", "Johor Bahru"];
+    private readonly IReadOnlyList<string> storageAreas = ["Receiving Area", "Main Floor A-01-02", "Back Room"];
+    private readonly IReadOnlyList<int> receivePresets = [1, 5, 10, 50, 100];
+
+    private int Remaining => Math.Max(0, ordered - previouslyReceived);
+    private int ShortQuantity => Math.Max(0, Remaining - receiveNow);
+    private bool CannotPost => receiveNow <= 0 || (ShortQuantity > 0 && string.IsNullOrWhiteSpace(exceptionReason));
+    private void ReceiveAll() { receiveNow = Remaining; exceptionReason = ""; }
+    private void SetShortDelivery() => exceptionReason = "Short delivery";
+    private void SetDamaged() => exceptionReason = "Damaged";
+    private void SetBackordered() => exceptionReason = "Backordered";
+
+    private async Task PostAsync()
+    {
+        if (CannotPost) return;
+        var detail = ShortQuantity > 0 ? $"Receive {receiveNow:N0} of {Remaining:N0} remaining units ({exceptionReason})." : $"Receive all {receiveNow:N0} remaining units.";
+        var confirmed = await Ui.ConfirmAsync("Post goods receipt?", $"{purchaseOrder} · {product}. {detail}", "Post GRN", "info");
+        if (!confirmed) return;
+
+        var movement = await Data.PostStockTransactionAsync(new StockTransactionDraft(
+            "Stock In", product, "", branch, storageArea, receiveNow, 68.50m, purchaseOrder));
+        previouslyReceived += movement.Quantity;
+        await Data.SetPurchaseOrderStatusAsync(purchaseOrder, Remaining == 0 ? "Received" : "Partially Received");
+        Ui.ShowToast("Goods receipt posted", $"{receiveNow:N0} units received against {purchaseOrder}.", "success", "Receive next", () => Ui.ShowToast("Ready for next receipt", "The receiving branch has been retained.", "info"));
+    }
+}

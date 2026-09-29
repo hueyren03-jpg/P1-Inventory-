@@ -1,0 +1,92 @@
+@page "/purchase-orders/new"
+@inject UiShellService Ui
+@inject IInventoryUiService Data
+@inject NavigationManager Navigation
+
+<PageTitle>New Purchase Order - P1 Inventory</PageTitle>
+<div class="breadcrumb"><a href="javascript:history.back()">Back</a><span>/</span><span>New Purchase Order</span></div>
+<PageHeader Title="New Purchase Order" Subtitle="Build supplier orders with touch-first selectors and calculator-backed pricing." />
+
+<section class="panel form-page pos-form-page touch-workflow-page">
+    <div class="touch-workflow-steps"><span class="active">1 Supplier</span><span>2 Product</span><span>3 Qty & Cost</span><span>4 Save</span></div>
+
+    <FormSection Title="Purchase order" Description="Choose supplier, destination and dates without small desktop dropdowns.">
+        <div class="touch-form-grid">
+            <TouchSelectField Label="Supplier" @bind-Value="supplier" Options="suppliers" />
+            <TouchSelectField Label="Destination branch" @bind-Value="branch" Options="branches" />
+            <TouchDateField Label="Order date" @bind-Value="orderDate" />
+            <TouchDateField Label="Expected date" @bind-Value="expectedDate" />
+            <TouchSelectField Label="Payment terms" @bind-Value="paymentTerms" Options="paymentOptions" />
+            <TouchSelectField Label="Currency" @bind-Value="currency" Options="currencies" Searchable="false" />
+        </div>
+        @if (InvalidDates)
+        {
+            <div class="touch-inline-error"><strong>!</strong><span>Expected date cannot be earlier than the order date.</span></div>
+        }
+    </FormSection>
+
+    <FormSection Title="Order line" Description="Tap quantity or cost to open the keypad. The line total updates immediately.">
+        <div class="touch-form-grid">
+            <div class="span-2"><TouchProductPicker @bind-Value="product" /></div>
+            <div class="span-2 touch-field-block">
+                <span class="touch-field-label">Quantity</span>
+                <TouchQuantityControl @bind-Value="quantity" Presets="quantityPresets" Label="Order quantity" ContextText="Enter ordered units, or calculate cartons × units per carton." />
+            </div>
+            <TouchNumericField Label="Unit cost" @bind-Value="unitCost" Prefix="RM " Decimals="2" Min="0" CalculatorContext="Enter supplier unit cost. Arithmetic can be used before applying the final value." />
+            <TouchSelectField Label="Tax" @bind-Value="tax" Options="taxOptions" Searchable="false" />
+        </div>
+
+        <div class="touch-order-total">
+            <div><span>Quantity</span><strong>@quantity.ToString("N0")</strong></div>
+            <span>×</span>
+            <div><span>Unit cost</span><strong>RM @unitCost.ToString("N2")</strong></div>
+            <span>=</span>
+            <div class="total"><span>Line total</span><strong>RM @LineTotal.ToString("N2")</strong></div>
+        </div>
+    </FormSection>
+
+    <FormSection Title="Notes" Description="Optional supplier or internal notes.">
+        <div class="form-grid"><label class="span-2"><span>Supplier note</span><textarea rows="3" placeholder="Shown on purchase order PDF"></textarea></label></div>
+    </FormSection>
+
+    <div class="form-actions pos-form-actions">
+        <a class="btn btn-secondary" href="/purchase-orders">Cancel</a>
+        <button class="btn btn-primary pos-primary-action" type="button" disabled="@CannotSave" @onclick="SaveAsync">Save PO · RM @LineTotal.ToString("N2")</button>
+    </div>
+</section>
+
+@code {
+    private string supplier = "TechSource Distribution";
+    private string branch = "Kuala Lumpur";
+    private string paymentTerms = "Net 30";
+    private string currency = "MYR";
+    private string product = "USB-C Hub 8-in-1";
+    private string tax = "SST 8%";
+    private DateTime orderDate = DateTime.Today;
+    private DateTime expectedDate = DateTime.Today.AddDays(5);
+    private int quantity = 300;
+    private decimal unitCost = 68.50m;
+
+    private readonly IReadOnlyList<string> suppliers = ["TechSource Distribution", "Metro Office Supply", "Penang Retail Wholesale", "Johor Components"];
+    private readonly IReadOnlyList<string> branches = ["Kuala Lumpur", "Petaling Jaya", "Penang", "Johor Bahru"];
+    private readonly IReadOnlyList<string> paymentOptions = ["Cash", "Net 7", "Net 14", "Net 30", "Net 60"];
+    private readonly IReadOnlyList<string> currencies = ["MYR", "USD", "SGD"];
+    private readonly IReadOnlyList<string> taxOptions = ["SST 8%", "SST 6%", "Zero rated"];
+    private readonly IReadOnlyList<int> quantityPresets = [1, 5, 10, 50, 100, 500];
+
+    private decimal LineTotal => quantity * unitCost;
+    private bool InvalidDates => expectedDate.Date < orderDate.Date;
+    private bool CannotSave => InvalidDates || quantity <= 0 || unitCost < 0;
+
+    private async Task SaveAsync()
+    {
+        if (CannotSave) return;
+        var confirmed = await Ui.ConfirmAsync("Save purchase order?", $"{supplier} · {quantity:N0} units of {product} · RM {LineTotal:N2}.", "Save purchase order", "info");
+        if (!confirmed) return;
+
+        var purchaseOrder = await Data.CreatePurchaseOrderAsync(new PurchaseOrderDraft(
+            supplier, branch, quantity, unitCost, DateOnly.FromDateTime(expectedDate), 1));
+        Ui.CompleteTouchAction("Purchase order saved", $"{purchaseOrder.Number} · {supplier} · {quantity:N0} units · RM {LineTotal:N2}");
+        Navigation.NavigateTo("/purchase-orders");
+    }
+}

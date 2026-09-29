@@ -1,0 +1,22 @@
+@page "/suppliers"
+
+<PageTitle>Suppliers - P1 Inventory</PageTitle>
+<PageHeader Title="Suppliers" Subtitle="Manage supplier contacts, products, lead times and performance.">
+    <Actions><a class="btn btn-primary" href="#"><AppIcon Name="plus" Size="15" /> Add supplier</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search suppliers" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="6" LinkColumn="0" LinkBase="/suppliers" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Supplier", "Code", "Products", "Open POs", "On-time rate", "Spend YTD", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["TechSource Distribution", "SUP-0012", "482", "4", "96%", "RM 482,390", "Active"],
+        ["PackPro Supplies", "SUP-0024", "128", "2", "91%", "RM 166,420", "Active"],
+        ["Northern Labels", "SUP-0038", "64", "1", "98%", "RM 84,210", "Active"],
+        ["Urban Apparel Manufacturing", "SUP-0051", "210", "3", "88%", "RM 306,800", "Active"]
+    ];
+}

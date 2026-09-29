@@ -1,0 +1,317 @@
+/* P1 Inventory SaaS — premium surface gradients
+   Loaded last. Adds depth to sidebar, app canvas, topbar and cards without touching typography. */
+
+:root {
+    --sidebar-grad-1: #07111f;
+    --sidebar-grad-2: #0e1a2d;
+    --sidebar-grad-3: #162844;
+    --sidebar-grad-4: #20395f;
+    --canvas-grad-1: #f8fbff;
+    --canvas-grad-2: #f2f6fb;
+    --canvas-grad-3: #edf3f9;
+    --surface-glow-blue: rgba(59,130,246,.10);
+    --surface-glow-indigo: rgba(99,102,241,.065);
+}
+
+/* Main app canvas */
+body {
+    background:
+        radial-gradient(circle at 88% -5%, var(--surface-glow-blue), transparent 28rem),
+        radial-gradient(circle at 8% 92%, var(--surface-glow-indigo), transparent 30rem),
+        linear-gradient(155deg, var(--canvas-grad-1) 0%, var(--canvas-grad-2) 48%, var(--canvas-grad-3) 100%) !important;
+    background-attachment: fixed !important;
+}
+
+.app-main {
+    background:
+        radial-gradient(circle at 78% 8%, rgba(59,130,246,.035), transparent 24rem),
+        linear-gradient(180deg, rgba(255,255,255,.16), rgba(241,245,249,.08));
+}
+
+.page-content {
+    background: transparent !important;
+}
+
+/* Sidebar — layered navy → slate gradient */
+.sidebar {
+    background:
+        radial-gradient(circle at 16% -5%, rgba(96,165,250,.20), transparent 26%),
+        radial-gradient(circle at 96% 86%, rgba(59,130,246,.10), transparent 30%),
+        linear-gradient(160deg,
+            var(--sidebar-grad-1) 0%,
+            var(--sidebar-grad-2) 32%,
+            var(--sidebar-grad-3) 68%,
+            var(--sidebar-grad-4) 100%) !important;
+    border-right: 1px solid rgba(148,163,184,.12) !important;
+    box-shadow:
+        inset -1px 0 0 rgba(255,255,255,.035),
+        10px 0 34px rgba(2,8,23,.17) !important;
+}
+
+.sidebar::before {
+    background:
+        radial-gradient(circle at 40% -20%, rgba(96,165,250,.18), transparent 62%) !important;
+}
+
+.brand-mark {
+    background: linear-gradient(145deg,#60a5fa 0%,#3b82f6 42%,#1d4ed8 100%) !important;
+    box-shadow:
+        0 10px 26px rgba(37,99,235,.32),
+        inset 0 1px rgba(255,255,255,.18) !important;
+}
+
+.brand-copy strong { color: #f8fbff !important; }
+.brand-copy span { color: rgba(191,219,254,.58) !important; }
+
+/* Tenant / branch switcher */
+.tenant-switcher {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,.085), rgba(255,255,255,.035)) !important;
+    border: 1px solid rgba(191,219,254,.12) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.045),
+        0 10px 26px rgba(2,8,23,.16) !important;
+    backdrop-filter: blur(10px);
+}
+
+.tenant-switcher:hover {
+    background:
+        linear-gradient(180deg, rgba(96,165,250,.16), rgba(255,255,255,.05)) !important;
+    border-color: rgba(147,197,253,.25) !important;
+}
+
+.tenant-switcher strong { color:#f8fbff !important; }
+.tenant-switcher small { color:rgba(191,219,254,.64) !important; }
+
+/* Navigation hierarchy */
+.nav-section-title {
+    color: rgba(191,219,254,.48) !important;
+}
+
+.nav-item {
+    color: rgba(226,232,240,.75) !important;
+    background: transparent;
+}
+
+.nav-item:hover {
+    color: #ffffff !important;
+    background:
+        linear-gradient(90deg, rgba(255,255,255,.075), rgba(96,165,250,.035)) !important;
+    box-shadow: inset 0 0 0 1px rgba(191,219,254,.04);
+}
+
+.nav-item.active {
+    color: #ffffff !important;
+    background:
+        linear-gradient(100deg, rgba(59,130,246,.34), rgba(96,165,250,.13) 72%, rgba(255,255,255,.035)) !important;
+    box-shadow:
+        inset 0 0 0 1px rgba(147,197,253,.17),
+        0 9px 24px rgba(30,64,175,.18) !important;
+}
+
+.nav-item.active::before {
+    background: linear-gradient(180deg,#93c5fd,#60a5fa) !important;
+    box-shadow: 0 0 12px rgba(96,165,250,.62);
+}
+
+.nav-icon { color: rgba(191,219,254,.62) !important; }
+.nav-item.active .nav-icon { color:#dbeafe !important; }
+
+.sidebar-footer {
+    border-top-color: rgba(191,219,254,.10) !important;
+    background: linear-gradient(180deg, transparent, rgba(2,8,23,.08));
+}
+
+/* Topbar — soft glass gradient */
+.topbar {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,.96), rgba(247,250,255,.90)) !important;
+    border-bottom: 1px solid rgba(148,163,184,.16) !important;
+    backdrop-filter: blur(20px) saturate(170%) !important;
+    box-shadow:
+        0 1px rgba(255,255,255,.75),
+        0 8px 24px rgba(15,23,42,.025) !important;
+}
+
+.global-search,
+.branch-switcher,
+.icon-button,
+.profile-button {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,.92), rgba(245,248,252,.90)) !important;
+}
+
+/* Panels / cards — slight tonal gradient for less blank surfaces */
+.panel,
+.kpi-card,
+.report-card,
+.help-card,
+.warehouse-card,
+.settings-nav,
+.state-card,
+.role-list,
+.permission-panel,
+.plan-card,
+.usage-card,
+.search-group,
+.quick-create-grid a {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,.985) 0%, rgba(250,252,255,.965) 100%) !important;
+    border-color: rgba(214,222,232,.88) !important;
+    box-shadow:
+        0 10px 28px rgba(15,23,42,.045),
+        0 1px 2px rgba(15,23,42,.035),
+        inset 0 1px rgba(255,255,255,.76) !important;
+}
+
+.kpi-card {
+    background:
+        radial-gradient(circle at 100% 0%, rgba(59,130,246,.055), transparent 32%),
+        linear-gradient(180deg,#ffffff 0%,#f9fbff 100%) !important;
+}
+
+.panel-header {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,.70), rgba(248,250,252,.48));
+}
+
+.list-toolbar,
+.pagination {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,.96), rgba(249,251,254,.95)) !important;
+}
+
+/* Tables get a little tonal separation */
+.data-table th {
+    background:
+        linear-gradient(180deg, #fbfcff 0%, #f4f7fb 100%) !important;
+}
+
+.data-table tbody tr:hover td {
+    background:
+        linear-gradient(90deg, rgba(239,246,255,.80), rgba(248,251,255,.88)) !important;
+}
+
+/* Decorative ambience behind dashboard / content */
+.dashboard-grid,
+.kpi-grid {
+    position: relative;
+}
+
+.dashboard-grid::before {
+    content: "";
+    position: absolute;
+    inset: -24px -18px auto auto;
+    width: 260px;
+    height: 180px;
+    pointer-events: none;
+    z-index: -1;
+    background: radial-gradient(circle,rgba(96,165,250,.055),transparent 68%);
+}
+
+/* DARK MODE */
+html[data-theme="dark"] {
+    --canvas-grad-1: #07101d;
+    --canvas-grad-2: #0a1423;
+    --canvas-grad-3: #0d1828;
+    --sidebar-grad-1: #030914;
+    --sidebar-grad-2: #081424;
+    --sidebar-grad-3: #10213a;
+    --sidebar-grad-4: #173052;
+}
+
+html[data-theme="dark"] body {
+    background:
+        radial-gradient(circle at 88% -5%, rgba(59,130,246,.12), transparent 28rem),
+        radial-gradient(circle at 8% 92%, rgba(99,102,241,.08), transparent 30rem),
+        linear-gradient(155deg, var(--canvas-grad-1), var(--canvas-grad-2) 50%, var(--canvas-grad-3)) !important;
+}
+
+html[data-theme="dark"] .app-main {
+    background:
+        radial-gradient(circle at 78% 8%, rgba(59,130,246,.045), transparent 24rem),
+        linear-gradient(180deg, rgba(15,23,42,.20), rgba(8,15,28,.08));
+}
+
+html[data-theme="dark"] .sidebar {
+    background:
+        radial-gradient(circle at 15% -6%, rgba(59,130,246,.20), transparent 26%),
+        radial-gradient(circle at 96% 86%, rgba(96,165,250,.08), transparent 30%),
+        linear-gradient(160deg,
+            var(--sidebar-grad-1) 0%,
+            var(--sidebar-grad-2) 33%,
+            var(--sidebar-grad-3) 70%,
+            var(--sidebar-grad-4) 100%) !important;
+}
+
+html[data-theme="dark"] .topbar {
+    background:
+        linear-gradient(180deg, rgba(14,24,39,.96), rgba(10,18,31,.93)) !important;
+    border-bottom-color: rgba(71,85,105,.38) !important;
+}
+
+html[data-theme="dark"] .global-search,
+html[data-theme="dark"] .branch-switcher,
+html[data-theme="dark"] .icon-button,
+html[data-theme="dark"] .profile-button {
+    background:
+        linear-gradient(180deg, rgba(30,41,59,.86), rgba(15,23,42,.88)) !important;
+}
+
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .kpi-card,
+html[data-theme="dark"] .report-card,
+html[data-theme="dark"] .help-card,
+html[data-theme="dark"] .settings-nav,
+html[data-theme="dark"] .state-card,
+html[data-theme="dark"] .role-list,
+html[data-theme="dark"] .permission-panel,
+html[data-theme="dark"] .plan-card,
+html[data-theme="dark"] .usage-card,
+html[data-theme="dark"] .search-group {
+    background:
+        linear-gradient(180deg, rgba(18,31,50,.97), rgba(13,24,40,.97)) !important;
+    border-color: rgba(71,85,105,.38) !important;
+    box-shadow:
+        0 12px 30px rgba(0,0,0,.20),
+        inset 0 1px rgba(255,255,255,.025) !important;
+}
+
+html[data-theme="dark"] .kpi-card {
+    background:
+        radial-gradient(circle at 100% 0%, rgba(59,130,246,.08), transparent 34%),
+        linear-gradient(180deg, rgba(18,31,50,.98), rgba(13,24,40,.98)) !important;
+}
+
+html[data-theme="dark"] .panel-header,
+html[data-theme="dark"] .list-toolbar,
+html[data-theme="dark"] .pagination {
+    background:
+        linear-gradient(180deg, rgba(20,32,51,.90), rgba(14,25,41,.88)) !important;
+}
+
+html[data-theme="dark"] .data-table th {
+    background:
+        linear-gradient(180deg, #17243a 0%, #111d30 100%) !important;
+}
+
+html[data-theme="dark"] .data-table tbody tr:hover td {
+    background:
+        linear-gradient(90deg, rgba(30,58,100,.42), rgba(20,35,58,.48)) !important;
+}
+
+/* Keep the gradient restrained on smaller screens. */
+@media (max-width: 820px) {
+    body {
+        background:
+            linear-gradient(180deg, var(--canvas-grad-1), var(--canvas-grad-2)) !important;
+    }
+    .sidebar {
+        box-shadow: 14px 0 42px rgba(2,8,23,.24) !important;
+    }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    .topbar,
+    .tenant-switcher { backdrop-filter: none !important; }
+}

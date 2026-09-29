@@ -1,0 +1,22 @@
+@page "/notifications"
+
+<PageTitle>Notifications - P1 Inventory</PageTitle>
+<PageHeader Title="Notifications" Subtitle="Operational alerts, approvals and system updates.">
+    <Actions><button class="btn btn-secondary">Mark all read</button></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search notifications" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="4" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Time", "Notification", "Module", "Priority", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["10:42 AM", "GRN-004821 posted successfully", "Inventory", "Normal", "Completed"],
+        ["10:02 AM", "PO-2026-003818 requires your approval", "Purchasing", "High", "Pending"],
+        ["9:30 AM", "39 SKUs are currently out of stock", "Inventory", "Critical", "Open"],
+        ["8:45 AM", "Stock count CNT-00241 has 12 variance lines", "Counts", "High", "Open"]
+    ];
+}

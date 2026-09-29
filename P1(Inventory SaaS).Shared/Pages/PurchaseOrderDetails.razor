@@ -1,0 +1,30 @@
+@page "/purchase-orders/{Id}"
+@inject IInventoryUiService Data
+@inject UiShellService Ui
+<PageTitle>Purchase Order - P1 Inventory</PageTitle><div class="breadcrumb"><a href="/purchase-orders">Purchase Orders</a><span>/</span><span>@Id</span></div>
+<PageHeader Title="@purchaseOrder.Number" Subtitle="@($"{purchaseOrder.Supplier} · {purchaseOrder.Warehouse}")"><Actions><StatusPill Text="@purchaseOrder.Status" Tone="@Tone(purchaseOrder.Status)" /><button class="btn btn-secondary" @onclick="DownloadPdf">Download PDF</button><button class="btn btn-secondary" disabled="@(purchaseOrder.Status is "Sent" or "Received" or "Closed")" @onclick="Send">Send to supplier</button><a class="btn btn-primary" href="/grn/new">Receive stock</a></Actions></PageHeader>
+<section class="panel workflow-panel"><WorkflowSteps Steps="steps" CurrentIndex="@CurrentStep" /></section>
+<section class="detail-layout"><article class="panel"><div class="tabbar">@foreach (var tab in tabs) { <button class="tab @(activeTab == tab ? "active" : "")" @onclick="() => activeTab = tab">@tab</button> }</div><SimpleTable Headers="headers" Rows="rows" /></article><aside class="panel side-summary"><h2>Order summary</h2><dl class="detail-list"><div><dt>Subtotal</dt><dd>RM @purchaseOrder.Total.ToString("N2")</dd></div><div><dt>Tax</dt><dd>Included</dd></div><div><dt>Total</dt><dd>RM @purchaseOrder.Total.ToString("N2")</dd></div><div><dt>Items</dt><dd>@purchaseOrder.Items</dd></div><div><dt>Expected</dt><dd>@purchaseOrder.ExpectedDate.ToString("dd MMM yyyy")</dd></div></dl></aside></section>
+@code {
+    [Parameter] public string Id {get;set;}="";
+    private readonly IReadOnlyList<string> steps=["Draft","Pending Approval","Approved","Sent","Partially Received","Received","Closed"];
+    private readonly string[] tabs=["Items","Receipts","Documents","Activity"];
+    private string activeTab="Items";
+    private readonly IReadOnlyList<string> headers=["Product","SKU","Ordered","Received","Unit cost","Line total"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows=[["USB-C Hub 8-in-1","HUB-8IN1-GR","300","0","RM 68.50","RM 20,550.00"],["Wireless Scanner S2","SCN-S2","80","0","RM 145.00","RM 11,600.00"],["HDMI Adapter","HDMI-ADP","300","0","RM 42.99","RM 12,897.00"]];
+    private PurchaseOrderRow purchaseOrder = new("PO-2026-003821", "TechSource Distribution", "KL Central", DateOnly.FromDateTime(DateTime.Today), DateOnly.FromDateTime(DateTime.Today.AddDays(5)), 3, 48_650m, "Approved");
+    private int CurrentStep => Math.Max(0, steps.ToList().FindIndex(x => x == purchaseOrder.Status));
+
+    protected override async Task OnParametersSetAsync()
+        => purchaseOrder = (await Data.GetPurchaseOrdersAsync()).FirstOrDefault(x => x.Number.Equals(Id, StringComparison.OrdinalIgnoreCase)) ?? purchaseOrder;
+
+    private void DownloadPdf() => Ui.ShowToast("PDF prepared", $"{purchaseOrder.Number}.pdf is ready in the mock workflow.", "success");
+    private async Task Send()
+    {
+        if (!await Ui.ConfirmAsync("Send purchase order?", $"Send {purchaseOrder.Number} to {purchaseOrder.Supplier}.", "Send", "info")) return;
+        await Data.SetPurchaseOrderStatusAsync(purchaseOrder.Number, "Sent");
+        purchaseOrder = purchaseOrder with { Status = "Sent" };
+        Ui.ShowToast("Purchase order sent", purchaseOrder.Number, "success");
+    }
+    private static string Tone(string status) => status is "Approved" or "Received" or "Closed" ? "success" : status == "Pending Approval" ? "warning" : "info";
+}

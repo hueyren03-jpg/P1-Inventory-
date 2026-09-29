@@ -1,0 +1,21 @@
+@page "/customers"
+
+<PageTitle>Customers - P1 Inventory</PageTitle>
+<PageHeader Title="Customers" Subtitle="Manage customer accounts, allocation rules and sales activity.">
+    <Actions><a class="btn btn-primary" href="#"><AppIcon Name="plus" Size="15" /> Add customer</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search customers" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="6" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Customer", "Code", "Open orders", "Reserved units", "Sales YTD", "Credit status", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["Retail Hub Sdn Bhd", "CUS-0021", "3", "120", "RM 184,300", "Good", "Active"],
+        ["FitWorks MY", "CUS-0042", "2", "82", "RM 116,240", "Good", "Active"],
+        ["OfficeMart", "CUS-0058", "1", "35", "RM 92,880", "Review", "Active"]
+    ];
+}

@@ -1,0 +1,86 @@
+@page "/stock-counts/{Id}/count"
+@inject UiShellService Ui
+@inject NavigationManager Navigation
+
+<PageTitle>Count Stock - P1 Inventory</PageTitle>
+<div class="breadcrumb"><a href="@($"/stock-counts/{Id}")">Back to count</a><span>/</span><span>Counting mode</span></div>
+<PageHeader Title="Counting mode" Subtitle="Fast one-item-at-a-time touchscreen counting." />
+
+<section class="touch-count-session">
+    <div class="touch-count-progress">
+        <div><strong>@(currentIndex + 1) / @items.Length</strong><span>@ProgressPercent% complete</span></div>
+        <div class="touch-progress-track"><span style="@ProgressStyle"></span></div>
+    </div>
+
+    <article class="touch-count-card">
+        <div class="touch-count-product">
+            <span class="touch-product-thumb large">@Current.Initials</span>
+            <div><span class="touch-kicker">@Current.Location</span><h2>@Current.Name</h2><p>@Current.Sku</p></div>
+        </div>
+
+        <div class="touch-count-scan-row">
+            <button type="button" class="btn btn-secondary" @onclick="OpenScanner"><AppIcon Name="scan" Size="20" /> Scan item</button>
+            <span>or enter the counted quantity below</span>
+        </div>
+
+        <div class="touch-count-number">
+            <span>Counted quantity</span>
+            <TouchQuantityControl @bind-Value="counted" Presets="countPresets" Label="Counted quantity" ContextText="Enter the physical quantity counted at this location." Suffix="" />
+        </div>
+
+        <div class="touch-count-actions">
+            <button type="button" class="btn btn-secondary" disabled="@(currentIndex == 0)" @onclick="Previous">Previous</button>
+            <button type="button" class="btn btn-primary pos-primary-action" @onclick="SaveNext">@(currentIndex == items.Length - 1 ? "Finish count" : "Save & Next")</button>
+        </div>
+    </article>
+
+    <aside class="touch-count-side">
+        <span class="touch-kicker">COUNT SESSION</span>
+        <strong>Zone A</strong>
+        <p>Blind count is enabled. Expected quantities stay hidden while counting.</p>
+        <div><span>Counted</span><strong>@currentIndex</strong></div>
+        <div><span>Remaining</span><strong>@(items.Length - currentIndex)</strong></div>
+        <button type="button" class="btn btn-secondary" @onclick="Pause">Pause count</button>
+    </aside>
+</section>
+
+@code {
+    [Parameter] public string Id { get; set; } = "";
+
+    private int currentIndex;
+    private int counted;
+    private readonly IReadOnlyList<int> countPresets = [1, 5, 10, 25, 50, 100];
+    private readonly CountItem[] items =
+    [
+        new("USB-C Hub 8-in-1", "HUB-8IN1-GR", "A-01-01", "UH"),
+        new("Packing Tape 48mm", "TAPE-48", "A-01-02", "PT"),
+        new("Thermal Label 100x150", "LBL-100150", "A-01-03", "TL"),
+        new("Wireless Scanner S2", "SCN-S2", "A-01-04", "WS")
+    ];
+
+    private CountItem Current => items[currentIndex];
+    private int ProgressPercent => (int)Math.Round((currentIndex / (double)items.Length) * 100);
+    private string ProgressStyle => $"width:{ProgressPercent}%";
+
+    private void Previous() { if (currentIndex > 0) { currentIndex--; counted = 0; } }
+    private void OpenScanner() => Ui.OpenScanner(ApplyScan, "product");
+    private Task ApplyScan(string code) { Ui.ShowToast("Count item selected", $"{Current.Sku} · scanned {code}", "success"); return Task.CompletedTask; }
+    private void Pause() => Ui.ShowToast("Count paused", "Your current counting position is kept in this UI preview.", "info");
+
+    private void SaveNext()
+    {
+        Ui.ShowToast("Count saved", $"{Current.Sku} · {counted:N0} units", "success");
+        if (currentIndex < items.Length - 1)
+        {
+            currentIndex++;
+            counted = 0;
+        }
+        else
+        {
+            Ui.ShowToast("Count complete", "All sample items have been counted. Review variances next.", "success");
+            Navigation.NavigateTo($"/stock-counts/{Id}");
+        }
+    }
+
+    private sealed record CountItem(string Name, string Sku, string Location, string Initials);
+}

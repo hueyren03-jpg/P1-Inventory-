@@ -1,0 +1,23 @@
+@page "/activity"
+
+<PageTitle>Activity - P1 Inventory</PageTitle>
+<PageHeader Title="Activity" Subtitle="Company-wide user and system activity.">
+    <Actions><button class="btn btn-secondary">Export activity</button></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search activity" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="5" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Time", "Actor", "Action", "Record", "Module", "Result"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["10:42 AM", "Sarah Lim", "Posted stock in", "GRN-004821", "Inventory", "Posted"],
+        ["10:18 AM", "Daniel Tan", "Dispatched transfer", "TR-001294", "Transfers", "Completed"],
+        ["9:56 AM", "Aina Yusuf", "Changed quantity", "ADJ-000829", "Adjustments", "Approved"],
+        ["9:30 AM", "System", "Reorder alert created", "RR-00214", "Automation", "Open"],
+        ["Yesterday", "Huey Ren", "Updated role", "Warehouse Staff", "Security", "Completed"]
+    ];
+}

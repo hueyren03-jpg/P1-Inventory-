@@ -1,0 +1,20 @@
+@page "/shipments"
+
+<PageTitle>Shipments - P1 Inventory</PageTitle>
+<PageHeader Title="Shipments" Subtitle="Track dispatched orders and delivery status.">
+    <Actions><a class="btn btn-primary" href="#"><AppIcon Name="plus" Size="15" /> Create shipment</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search shipments" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="6" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Shipment", "Order", "Carrier", "Tracking", "Packages", "Dispatched", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["SHP-008192", "SO-009281", "J&T Express", "JT88201923", "2", "14 Sep 2:18 PM", "In Transit"],
+        ["SHP-008191", "SO-009279", "DHL eCommerce", "DHL183821", "1", "13 Sep 4:42 PM", "Completed"]
+    ];
+}

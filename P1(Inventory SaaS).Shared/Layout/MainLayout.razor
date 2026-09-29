@@ -1,0 +1,38 @@
+@inherits LayoutComponentBase
+
+<div class="app-shell @(sidebarOpen ? "" : "sidebar-collapsed")">
+    <Sidebar Expanded="@sidebarOpen" OnToggle="ToggleSidebar" />
+
+    <div class="app-main">
+        <TopBar OnMenuClick="ToggleSidebar" />
+        <TouchPosBar />
+        <main class="page-content">
+            @Body
+        </main>
+    </div>
+
+    @if (mobileNavOpen)
+    {
+        <div class="mobile-overlay" @onclick="CloseMobileNav"></div>
+    }
+
+    <MobileBottomNav />
+    <UiInteractionLayer />
+</div>
+
+@code {
+    private bool sidebarOpen = true;
+    private bool mobileNavOpen;
+
+    private void ToggleSidebar()
+    {
+        sidebarOpen = !sidebarOpen;
+        mobileNavOpen = sidebarOpen;
+    }
+
+    private void CloseMobileNav()
+    {
+        sidebarOpen = false;
+        mobileNavOpen = false;
+    }
+}

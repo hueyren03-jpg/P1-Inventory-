@@ -1,0 +1,22 @@
+@page "/users"
+
+<PageTitle>Users - P1 Inventory</PageTitle>
+<PageHeader Title="Users" Subtitle="Manage identities, roles, MFA and warehouse access.">
+    <Actions><a class="btn btn-secondary" href="/roles">Roles & permissions</a><a class="btn btn-primary" href="#"><AppIcon Name="plus" Size="15" /> Invite user</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search users" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="6" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["User", "Email", "Role", "Warehouse scope", "MFA", "Last active", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["Huey Ren", "huey@example.com", "Administrator", "All warehouses", "Enabled", "Now", "Active"],
+        ["Sarah Lim", "sarah@example.com", "Inventory Manager", "KL Central", "Enabled", "7 min ago", "Active"],
+        ["Daniel Tan", "daniel@example.com", "Warehouse Manager", "PJ Warehouse", "Enabled", "1 hr ago", "Active"],
+        ["Aina Yusuf", "aina@example.com", "Warehouse Staff", "KL Central", "Not enabled", "3 hr ago", "Active"]
+    ];
+}

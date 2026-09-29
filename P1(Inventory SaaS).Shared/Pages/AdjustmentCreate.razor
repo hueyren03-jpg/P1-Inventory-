@@ -1,0 +1,89 @@
+@page "/adjustments/new"
+@inject UiShellService Ui
+@inject IInventoryUiService Data
+
+<PageTitle>New Adjustment - P1 Inventory</PageTitle>
+<div class="breadcrumb"><a href="javascript:history.back()">Back</a><span>/</span><span>New Adjustment</span></div>
+<PageHeader Title="New Adjustment" Subtitle="Correct stock with clear before/after values and a signed touch keypad." />
+
+<section class="panel form-page pos-form-page touch-workflow-page">
+    <div class="touch-workflow-steps"><span class="active">1 Reason</span><span>2 Product</span><span>3 Change</span><span>4 Confirm</span></div>
+
+    <FormSection Title="Adjustment setup" Description="Choose branch, date and reason with touch-friendly selectors.">
+        <div class="touch-form-grid">
+            <TouchSelectField Label="Branch" @bind-Value="branch" Options="branches" />
+            <TouchDateField Label="Adjustment date" @bind-Value="adjustmentDate" />
+            <TouchSelectField Label="Reason" @bind-Value="reason" Options="reasons" />
+            <label class="touch-text-field"><span class="touch-field-label">Reference</span><input type="text" placeholder="Optional reference" /></label>
+        </div>
+    </FormSection>
+
+    <FormSection Title="Adjustment line" Description="Pick the product and use the signed calculator. Positive adds stock; negative removes stock.">
+        <div class="touch-form-grid">
+            <div class="span-2"><TouchProductPicker @bind-Value="product" /></div>
+            <TouchSelectField Label="Storage area" @bind-Value="storageArea" Options="storageAreas" />
+            <div class="touch-stock-snapshot"><span>Current on hand</span><strong>@currentOnHand units</strong><small>@branch · @storageArea</small></div>
+            <div class="span-2 touch-field-block">
+                <span class="touch-field-label">Adjustment quantity</span>
+                <div class="touch-adjust-mode">
+                    <button type="button" class="@(quantity < 0 ? "active danger" : "")" @onclick="SetDecreaseMode">− Remove stock</button>
+                    <button type="button" class="@(quantity >= 0 ? "active success" : "")" @onclick="SetIncreaseMode">+ Add stock</button>
+                </div>
+                <TouchQuantityControl @bind-Value="quantity" AllowNegative="true" Presets="adjustmentPresets" Label="Adjustment quantity" ContextText="Enter a positive or negative adjustment. The preview below shows the resulting stock before you submit." />
+            </div>
+        </div>
+
+        <div class="touch-before-after @(quantity < 0 ? "decrease" : "increase")">
+            <div><span>Before</span><strong>@currentOnHand</strong></div><span class="touch-flow-arrow">→</span>
+            <div><span>Change</span><strong>@(quantity > 0 ? "+" : "")@quantity</strong></div><span class="touch-flow-arrow">→</span>
+            <div><span>After</span><strong>@RawAfterAdjustment</strong></div>
+        </div>
+
+        @if (InvalidAdjustment)
+        {
+            <div class="touch-inline-error"><strong>!</strong><span>This adjustment would make stock negative. Reduce the removal quantity before submitting.</span></div>
+        }
+    </FormSection>
+
+    <FormSection Title="Audit explanation" Description="Required context for reviewers when the adjustment is posted.">
+        <div class="form-grid"><label class="span-2"><span>Explanation</span><textarea rows="3" placeholder="Explain why this adjustment is required"></textarea></label></div>
+    </FormSection>
+
+    <div class="form-actions pos-form-actions">
+        <a class="btn btn-secondary" href="/adjustments">Cancel</a>
+        <button class="btn btn-primary pos-primary-action" type="button" disabled="@InvalidAdjustment" @onclick="ConfirmAsync">Submit Adjustment · @(quantity > 0 ? "+" : "")@quantity</button>
+    </div>
+</section>
+
+@code {
+    private string branch = "Kuala Lumpur";
+    private string reason = "Count correction";
+    private string product = "Wireless Scanner S2";
+    private string storageArea = "Main Floor B-02-01";
+    private DateTime adjustmentDate = DateTime.Today;
+    private int currentOnHand = 18;
+    private int quantity = -3;
+
+    private readonly IReadOnlyList<string> branches = ["Kuala Lumpur", "Petaling Jaya", "Penang", "Johor Bahru"];
+    private readonly IReadOnlyList<string> reasons = ["Count correction", "Damage", "Data correction", "Shrinkage", "Found stock"];
+    private readonly IReadOnlyList<string> storageAreas = ["Main Floor B-02-01", "Back Room", "Service Area"];
+    private readonly IReadOnlyList<int> adjustmentPresets = [-10, -5, -1, 1, 5, 10];
+
+    private int RawAfterAdjustment => currentOnHand + quantity;
+    private bool InvalidAdjustment => RawAfterAdjustment < 0 || quantity == 0;
+    private void SetDecreaseMode() { if (quantity >= 0) quantity = quantity == 0 ? -1 : -quantity; }
+    private void SetIncreaseMode() { if (quantity < 0) quantity = Math.Abs(quantity); }
+
+    private async Task ConfirmAsync()
+    {
+        if (InvalidAdjustment) return;
+        var confirmed = await Ui.ConfirmAsync("Post stock adjustment?", $"{product}: {currentOnHand} → {RawAfterAdjustment} units at {branch}.", "Post adjustment", "warning");
+        if (!confirmed) return;
+
+        var before = currentOnHand;
+        var movement = await Data.PostStockTransactionAsync(new StockTransactionDraft(
+            "Adjustment", product, "", branch, storageArea, quantity, 0));
+        currentOnHand = Math.Max(0, currentOnHand + movement.Quantity);
+        Ui.ShowToast("Adjustment posted", $"{movement.Reference} · {product}: {before} → {currentOnHand} units.", "success");
+    }
+}

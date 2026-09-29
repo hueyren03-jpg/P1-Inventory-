@@ -1,0 +1,82 @@
+@inject UiShellService Ui
+
+<div class="touch-product-field">
+    <span class="touch-field-label">@Label</span>
+    <button type="button" class="touch-product-trigger" @onclick="OpenSheet">
+        <span class="touch-product-trigger-icon"><AppIcon Name="box" Size="20" /></span>
+        <span><strong>@(string.IsNullOrWhiteSpace(Value) ? "Choose product" : Value)</strong><small>Tap to search, choose recent, or scan</small></span>
+        <span>›</span>
+    </button>
+</div>
+
+@if (sheetOpen)
+{
+    <div class="touch-sheet-backdrop" @onclick="CloseSheet">
+        <section class="touch-product-sheet" role="dialog" aria-modal="true" aria-label="@Label" @onclick:stopPropagation>
+            <div class="touch-sheet-handle"></div>
+            <header class="touch-picker-head">
+                <div><span class="touch-kicker">PRODUCT</span><h2>@Label</h2></div>
+                <button type="button" class="touch-sheet-close" @onclick="CloseSheet">×</button>
+            </header>
+
+            <div class="touch-product-actions">
+                <div class="touch-picker-search"><AppIcon Name="search" Size="18" /><input @bind="search" @bind:event="oninput" placeholder="Search product, SKU or barcode" /></div>
+                <button type="button" class="btn btn-primary touch-scan-product" @onclick="OpenScanner"><AppIcon Name="scan" Size="20" /> Scan</button>
+            </div>
+
+            <div class="touch-picker-section-label">@(string.IsNullOrWhiteSpace(search) ? "Recent products" : "Matching products")</div>
+            <div class="touch-product-list">
+                @foreach (var product in FilteredProducts)
+                {
+                    <button type="button" class="touch-product-option @(product.Name == Value ? "selected" : "")" @onclick="() => SelectAsync(product.Name)">
+                        <span class="touch-product-thumb">@product.Initials</span>
+                        <span class="touch-product-copy"><strong>@product.Name</strong><small>@product.Sku · @product.Stock available</small></span>
+                        @if (product.Name == Value) { <strong class="touch-check">✓</strong> }
+                    </button>
+                }
+            </div>
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter] public string Label { get; set; } = "Product / SKU";
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+    private bool sheetOpen;
+    private string search = "";
+    private readonly TouchProductOption[] products =
+    [
+        new("USB-C Hub 8-in-1", "HUB-8IN1-GR", 385, "UH"),
+        new("Wireless Scanner S2", "SCN-S2", 12, "WS"),
+        new("Thermal Label 100x150", "LBL-100150", 980, "TL"),
+        new("Receipt Roll 80mm", "ROLL-80", 0, "RR"),
+        new("Running Tee / Black / M", "TEE-BLK-M", 146, "RT")
+    ];
+
+    private IEnumerable<TouchProductOption> FilteredProducts => string.IsNullOrWhiteSpace(search)
+        ? products
+        : products.Where(x => x.Name.Contains(search, StringComparison.OrdinalIgnoreCase) || x.Sku.Contains(search, StringComparison.OrdinalIgnoreCase));
+
+    private void OpenSheet() { search = ""; sheetOpen = true; }
+    private void CloseSheet() => sheetOpen = false;
+    private void OpenScanner() { sheetOpen = false; Ui.OpenScanner(ApplyScannedProductAsync, "product"); }
+    private async Task SelectAsync(string value) { Value = value; sheetOpen = false; await ValueChanged.InvokeAsync(value); }
+
+    private async Task ApplyScannedProductAsync(string code)
+    {
+        var match = products.FirstOrDefault(x => x.Sku.Equals(code, StringComparison.OrdinalIgnoreCase));
+        if (match is null)
+        {
+            Ui.ShowToast("Product not found", $"No sample product matches {code}.", "warning");
+            return;
+        }
+
+        Value = match.Name;
+        await ValueChanged.InvokeAsync(match.Name);
+        Ui.ShowToast("Product selected", $"{match.Name} · {match.Sku}", "success");
+    }
+
+    private sealed record TouchProductOption(string Name, string Sku, int Stock, string Initials);
+}

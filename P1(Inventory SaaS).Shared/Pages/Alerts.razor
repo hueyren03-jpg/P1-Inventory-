@@ -1,0 +1,21 @@
+@page "/automation/alerts"
+
+<PageTitle>Alerts - P1 Inventory</PageTitle>
+<PageHeader Title="Alerts" Subtitle="Configure operational alerts and escalation channels.">
+    <Actions><a class="btn btn-primary" href="#"><AppIcon Name="plus" Size="15" /> New alert</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search alerts" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="5" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Alert", "Condition", "Severity", "Recipients", "Channel", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["Out of stock", "Available = 0", "Critical", "Inventory Managers", "In-app + Email", "Active"],
+        ["Expiry risk", "Expiry \u2264 30 days", "Warning", "Warehouse Managers", "In-app", "Active"],
+        ["PO delayed", "Expected date passed", "Warning", "Purchasing", "In-app + Email", "Active"]
+    ];
+}

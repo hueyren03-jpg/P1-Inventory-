@@ -1,0 +1,21 @@
+@page "/price-lists"
+
+<PageTitle>Price Lists - P1 Inventory</PageTitle>
+<PageHeader Title="Price Lists" Subtitle="Manage selling prices for channels and customer groups.">
+    <Actions><a class="btn btn-primary" href="#"><AppIcon Name="plus" Size="15" /> New price list</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search price lists" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="5" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Price list", "Currency", "Products", "Customers", "Updated", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["Retail MYR", "MYR", "8,642", "All retail", "Today", "Active"],
+        ["Wholesale MYR", "MYR", "5,128", "62", "Yesterday", "Active"],
+        ["Singapore SGD", "SGD", "1,420", "18", "10 Sep 2026", "Active"]
+    ];
+}

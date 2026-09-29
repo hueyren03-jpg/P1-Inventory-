@@ -1,0 +1,40 @@
+@page "/branches"
+
+<PageTitle>Branch Setup - P1 Inventory</PageTitle>
+
+<PageHeader Title="Branch Setup" Subtitle="Create and manage business branches used across inventory, purchasing and sales.">
+    <Actions>
+        <button class="btn btn-primary"><AppIcon Name="plus" Size="15" /> Add branch</button>
+    </Actions>
+</PageHeader>
+
+<section class="kpi-grid">
+    <KpiCard Label="Active branches" Value="4" Footer="All operating normally" />
+    <KpiCard Label="Users assigned" Value="39" Footer="Across all branches" />
+    <KpiCard Label="Products tracked" Value="8,642" Footer="Shared catalog" />
+    <KpiCard Label="Primary branch" Value="Kuala Lumpur" Footer="BR-KL01" />
+</section>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search branch name, code or city" ResultText="@($"{rows.Count} branches")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="6" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination">
+        <span>Showing all branches</span>
+        <div>
+            <button class="btn btn-secondary compact" disabled>Previous</button>
+            <button class="btn btn-secondary compact" disabled>Next</button>
+        </div>
+    </div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Branch", "Code", "City", "Users", "Manager", "Contact", "Status"];
+
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows =
+    [
+        ["Kuala Lumpur HQ", "BR-KL01", "Kuala Lumpur", "18", "Huey Ren", "+60 3-2181 8800", "Active"],
+        ["Petaling Jaya Branch", "BR-PJ01", "Petaling Jaya", "9", "Daniel Tan", "+60 3-7956 2200", "Active"],
+        ["Penang Branch", "BR-PG01", "Bayan Lepas", "6", "Lee Wei Jian", "+60 4-611 3300", "Active"],
+        ["Johor Branch", "BR-JB01", "Johor Bahru", "6", "Marcus Lee", "+60 7-332 4400", "Active"]
+    ];
+}

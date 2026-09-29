@@ -1,0 +1,21 @@
+@page "/integrations/import-export"
+
+<PageTitle>Import & Export - P1 Inventory</PageTitle>
+<PageHeader Title="Import & Export" Subtitle="Track bulk data jobs and downloadable files.">
+    <Actions><a class="btn btn-primary" href="#"><AppIcon Name="plus" Size="15" /> New import</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search import & export" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="6" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Job", "Type", "Entity", "Records", "Started by", "Created", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["IMP-00182", "Import", "Products", "1,820", "Huey Ren", "14 Sep 9:12 AM", "Completed"],
+        ["EXP-00241", "Export", "Stock Balance", "8,642", "Sarah Lim", "14 Sep 8:45 AM", "Completed"],
+        ["IMP-00181", "Import", "Suppliers", "82", "Huey Ren", "13 Sep 4:20 PM", "Failed"]
+    ];
+}

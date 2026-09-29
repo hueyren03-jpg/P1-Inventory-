@@ -1,0 +1,64 @@
+@page "/stock-movements"
+@inject IInventoryUiService Data
+
+<PageTitle>Stock Movements - P1 Inventory</PageTitle>
+
+<PageHeader Title="Stock movements" Subtitle="Immutable inventory transaction history and audit trail.">
+    <Actions>
+        <button class="btn btn-secondary"><AppIcon Name="download" Size="15" /> Export</button>
+    </Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <div class="list-toolbar">
+        <div class="toolbar-search"><AppIcon Name="search" Size="16" /><input placeholder="Search reference, product or SKU" /></div>
+        <button class="btn btn-secondary"><AppIcon Name="filter" Size="15" /> Filters</button>
+        <button class="btn btn-secondary">Last 30 days ⌄</button>
+        <button class="btn btn-secondary">All types ⌄</button>
+    </div>
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date & time</th>
+                    <th>Reference</th>
+                    <th>Product</th>
+                    <th>Warehouse</th>
+                    <th>Type</th>
+                    <th class="numeric">Quantity</th>
+                    <th>User</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in rows)
+                {
+                    <tr>
+                        <td>@row.OccurredAt.ToString("dd MMM yyyy, h:mm tt")</td>
+                        <td><a class="record-link">@row.Reference</a></td>
+                        <td><div class="cell-primary">@row.Product</div><div class="cell-secondary">@row.Sku</div></td>
+                        <td>@row.Warehouse</td>
+                        <td><StatusPill Text="@row.Type" Tone="@Tone(row.Type)" /></td>
+                        <td class="numeric @(row.Quantity >= 0 ? "positive" : "negative")">@(row.Quantity >= 0 ? "+" : "")@row.Quantity</td>
+                        <td>@row.User</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@code {
+    private IReadOnlyList<StockMovementRow> rows = [];
+
+    protected override async Task OnInitializedAsync()
+        => rows = await Data.GetRecentMovementsAsync();
+
+    private static string Tone(string type) => type switch
+    {
+        "Stock In" => "success",
+        "Stock Out" => "danger",
+        "Adjustment" => "warning",
+        _ => "info"
+    };
+}

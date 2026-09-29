@@ -1,0 +1,21 @@
+@page "/inventory/expiring"
+
+<PageTitle>Expiring Stock - P1 Inventory</PageTitle>
+<PageHeader Title="Expiring Stock" Subtitle="Prioritize batches approaching expiry.">
+    <Actions><button class="btn btn-secondary">Expiry policy</button></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search expiring stock" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="6" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Product", "Batch", "Warehouse", "Qty", "Expiry", "Days left", "Risk"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["Organic Milk 1L", "B-260801-A", "KL Central", "84", "18 Sep 2026", "4", "Critical"],
+        ["Protein Drink Vanilla", "B-260730-C", "Penang", "120", "28 Sep 2026", "14", "Warning"],
+        ["Energy Gel Citrus", "B-260701-D", "PJ Warehouse", "60", "12 Oct 2026", "28", "Warning"]
+    ];
+}

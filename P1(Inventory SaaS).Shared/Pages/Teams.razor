@@ -1,0 +1,21 @@
+@page "/teams"
+
+<PageTitle>Teams - P1 Inventory</PageTitle>
+<PageHeader Title="Teams" Subtitle="Group users for warehouse assignments and approvals.">
+    <Actions><a class="btn btn-primary" href="#"><AppIcon Name="plus" Size="15" /> New team</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search teams" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="4" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Team", "Members", "Warehouses", "Purpose", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["KL Count Team", "6", "KL Central", "Cycle counts", "Active"],
+        ["Purchasing", "4", "All warehouses", "Purchasing & approvals", "Active"],
+        ["PJ Fulfilment", "8", "PJ Warehouse", "Picking & packing", "Active"]
+    ];
+}

@@ -1,0 +1,30 @@
+@page "/stock-counts/{Id}"
+<PageTitle>Stock Count - P1 Inventory</PageTitle>
+<div class="breadcrumb"><a href="/stock-counts">Stock Counts</a><span>/</span><span>@Id</span></div>
+<PageHeader Title="CNT-00241" Subtitle="Kuala Lumpur · Zone A · Cycle count">
+    <Actions>
+        <StatusPill Text="Counting" Tone="warning" />
+        <button class="btn btn-secondary">Pause</button>
+        <a class="btn btn-primary" href="@($"/stock-counts/{Id}/count")">Continue count</a>
+    </Actions>
+</PageHeader>
+<section class="kpi-grid">
+    <KpiCard Label="Locations" Value="18" Footer="15 completed"/>
+    <KpiCard Label="SKUs" Value="420" Footer="382 counted"/>
+    <KpiCard Label="Variance lines" Value="12" Badge="2.9%" BadgeTone="warning" Footer="Needs review"/>
+    <KpiCard Label="Value variance" Value="RM 420" Footer="Before approval"/>
+</section>
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search counted SKU" ResultText="382 of 420 counted"/>
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="6" />
+</section>
+@code {
+    [Parameter] public string Id { get; set; } = "";
+    private readonly IReadOnlyList<string> headers=["Location","SKU","Product","Expected","Counted","Variance","Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows=
+    [
+        ["A-01-01","HUB-8IN1-GR","USB-C Hub 8-in-1","120","119","-1","Warning"],
+        ["A-01-02","TAPE-48","Packing Tape 48mm","260","260","0","Completed"],
+        ["A-01-03","LBL-100150","Thermal Label 100x150","180","184","+4","Warning"]
+    ];
+}

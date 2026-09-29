@@ -1,0 +1,20 @@
+@page "/packing"
+
+<PageTitle>Packing - P1 Inventory</PageTitle>
+<PageHeader Title="Packing" Subtitle="Pack picked orders and prepare shipment labels.">
+    <Actions></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search packing" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="6" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Pack", "Order", "Warehouse", "Packages", "Weight", "Packed by", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["PACK-00219", "SO-009281", "KL Central", "2", "8.4 kg", "Aina Yusuf", "Packed"],
+        ["PACK-00218", "SO-009279", "PJ Warehouse", "1", "2.1 kg", "Daniel Tan", "Completed"]
+    ];
+}

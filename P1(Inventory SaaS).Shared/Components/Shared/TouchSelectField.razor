@@ -1,0 +1,51 @@
+<div class="touch-select-field">
+    <span class="touch-field-label">@Label</span>
+    <button type="button" class="touch-select-trigger" @onclick="OpenSheet">
+        <span>@(string.IsNullOrWhiteSpace(Value) ? Placeholder : Value)</span>
+        <span aria-hidden="true">⌄</span>
+    </button>
+</div>
+
+@if (sheetOpen)
+{
+    <div class="touch-sheet-backdrop" @onclick="CloseSheet">
+        <section class="touch-picker-sheet" role="dialog" aria-modal="true" aria-label="@Label" @onclick:stopPropagation>
+            <div class="touch-sheet-handle"></div>
+            <header class="touch-picker-head">
+                <div><span class="touch-kicker">SELECT</span><h2>@Label</h2></div>
+                <button type="button" class="touch-sheet-close" @onclick="CloseSheet">×</button>
+            </header>
+            @if (Searchable)
+            {
+                <div class="touch-picker-search"><AppIcon Name="search" Size="18" /><input @bind="search" @bind:event="oninput" placeholder="@SearchPlaceholder" /></div>
+            }
+            <div class="touch-option-list">
+                @foreach (var option in FilteredOptions)
+                {
+                    <button type="button" class="touch-option @(option == Value ? "selected" : "")" @onclick="() => SelectAsync(option)">
+                        <span>@option</span>
+                        @if (option == Value) { <strong>✓</strong> }
+                    </button>
+                }
+            </div>
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter] public string Label { get; set; } = "Select";
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public IReadOnlyList<string> Options { get; set; } = Array.Empty<string>();
+    [Parameter] public string Placeholder { get; set; } = "Choose an option";
+    [Parameter] public bool Searchable { get; set; } = true;
+
+    private bool sheetOpen;
+    private string search = "";
+    private string SearchPlaceholder => $"Search {Label.ToLowerInvariant()}";
+    private IEnumerable<string> FilteredOptions => string.IsNullOrWhiteSpace(search) ? Options : Options.Where(x => x.Contains(search, StringComparison.OrdinalIgnoreCase));
+
+    private void OpenSheet() { search = ""; sheetOpen = true; }
+    private void CloseSheet() => sheetOpen = false;
+    private async Task SelectAsync(string option) { Value = option; sheetOpen = false; await ValueChanged.InvokeAsync(option); }
+}

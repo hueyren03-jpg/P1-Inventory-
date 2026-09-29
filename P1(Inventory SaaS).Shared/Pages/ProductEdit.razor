@@ -1,0 +1,129 @@
+@page "/products/{Id}/edit"
+@inject UiShellService Ui
+@inject IInventoryUiService Data
+@inject NavigationManager Navigation
+
+<PageTitle>Edit product - P1 Inventory</PageTitle>
+
+<div class="breadcrumb"><a href="javascript:history.back()">Back</a><span>/</span><span>Edit product</span></div>
+<PageHeader Title="Edit product" Subtitle="Update product information using the same touch-first controls as stock operations." />
+
+<section class="panel form-page pos-form-page touch-workflow-page">
+    <FormSection Title="Product media" Description="Update the image used in product lists, details and stock workflows.">
+        <ProductImageUpload InitialImageUrl="_content/StockPilot.Shared/images/products/hub.svg" ImageChanged="OnImageChanged" />
+    </FormSection>
+
+    <FormSection Title="Basic information" Description="Use large selectors and scanner access instead of small desktop controls.">
+        <div class="touch-form-grid">
+            <label class="touch-text-field"><span class="touch-field-label">Product name</span><input type="text" value="@productName" @oninput="OnNameInput" /></label>
+            <label class="touch-text-field"><span class="touch-field-label">SKU</span><input type="text" value="@sku" @oninput="OnSkuInput" /></label>
+            <TouchSelectField Label="Category" Value="@category" ValueChanged="SetCategory" Options="categories" />
+            <TouchSelectField Label="Brand" Value="@brand" ValueChanged="SetBrand" Options="brands" />
+            <div class="touch-barcode-field span-2">
+                <span class="touch-field-label">Barcode</span>
+                <div><input type="text" value="@barcode" @oninput="OnBarcodeInput" /><button type="button" class="btn btn-primary" @onclick="OpenScanner"><AppIcon Name="scan" Size="20" /> Scan</button></div>
+            </div>
+            <TouchSelectField Label="Base unit" Value="@baseUnit" ValueChanged="SetBaseUnit" Options="baseUnits" Searchable="false" />
+        </div>
+    </FormSection>
+
+    <FormSection Title="Stock planning" Description="Tap numeric values to open the calculator instead of relying on the Windows keyboard.">
+        <div class="touch-form-grid">
+            <TouchSelectField Label="Primary branch" Value="@primaryBranch" ValueChanged="SetPrimaryBranch" Options="branches" />
+            <TouchNumericField Label="Preferred stock level" Value="@preferredStock" ValueChanged="SetPreferredStock" Decimals="0" Min="0" Suffix=" units" QuickValues="stockQuickValues" />
+            <TouchNumericField Label="Restock quantity" Value="@restockQuantity" ValueChanged="SetRestockQuantity" Decimals="0" Min="0" Suffix=" units" QuickValues="restockQuickValues" />
+            <TouchSelectField Label="Preferred supplier" Value="@supplier" ValueChanged="SetSupplier" Options="suppliers" />
+            <TouchNumericField Label="Lead time" Value="@leadTime" ValueChanged="SetLeadTime" Decimals="0" Min="0" Max="365" Suffix=" days" QuickValues="leadTimeQuickValues" />
+        </div>
+    </FormSection>
+
+    <div class="form-actions pos-form-actions">
+        <span class="save-state @(saved ? "saved" : isDirty ? "dirty" : "")">@(isSaving ? "Saving…" : saved ? "✓ Changes saved" : isDirty ? "Unsaved changes" : "No changes")</span>
+        <a class="btn btn-secondary" href="/products">Cancel</a>
+        <button class="btn btn-primary pos-primary-action @(isSaving ? "is-loading" : "")" disabled="@isSaving" @onclick="SaveAsync">
+            @if (isSaving) { <span class="btn-spinner"></span> }
+            @(isSaving ? "Saving…" : "Save changes")
+        </button>
+    </div>
+</section>
+
+@code {
+    [Parameter] public string Id { get; set; } = "";
+
+    private bool isDirty;
+    private bool isSaving;
+    private bool saved;
+    private string productName = "USB-C Hub 8-in-1";
+    private string sku = "HUB-8IN1-GR";
+    private string? imageUrl = "_content/StockPilot.Shared/images/products/hub.svg";
+    private string category = "Electronics";
+    private string brand = "DockPro";
+    private string barcode = "9550001211207";
+    private string baseUnit = "Unit";
+    private string primaryBranch = "Kuala Lumpur";
+    private string supplier = "TechSource Distribution";
+    private decimal preferredStock = 100;
+    private decimal restockQuantity = 300;
+    private decimal leadTime = 5;
+    private decimal averageCost = 68.50m;
+    private decimal sellingPrice = 109m;
+
+    private readonly IReadOnlyList<string> categories = ["Electronics", "Apparel", "Consumables", "Accessories", "Office"];
+    private readonly IReadOnlyList<string> brands = ["DockPro", "ScanPro", "P1 Basics", "RetailWorks"];
+    private readonly IReadOnlyList<string> baseUnits = ["Unit", "Box", "Pack", "Roll", "Pair"];
+    private readonly IReadOnlyList<string> branches = ["Kuala Lumpur", "Petaling Jaya", "Penang", "Johor Bahru"];
+    private readonly IReadOnlyList<string> suppliers = ["TechSource Distribution", "Metro Office Supply", "Penang Retail Wholesale", "Johor Components"];
+    private readonly IReadOnlyList<decimal> stockQuickValues = [10, 20, 50, 100];
+    private readonly IReadOnlyList<decimal> restockQuickValues = [10, 50, 100, 300, 500];
+    private readonly IReadOnlyList<decimal> leadTimeQuickValues = [1, 3, 5, 7, 14, 30];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var product = await Data.GetProductAsync(Id);
+        if (product is null) return;
+        productName = product.Name;
+        sku = product.Sku;
+        category = product.Category;
+        primaryBranch = product.Warehouse;
+        averageCost = product.AverageCost;
+        sellingPrice = product.SellingPrice;
+        imageUrl = product.ImageUrl;
+    }
+
+    private void MarkDirty(ChangeEventArgs _) { isDirty = true; saved = false; }
+    private void OnNameInput(ChangeEventArgs e) { productName = e.Value?.ToString() ?? ""; SetDirty(); }
+    private void OnSkuInput(ChangeEventArgs e) { sku = e.Value?.ToString() ?? ""; SetDirty(); }
+    private Task OnImageChanged(string? value) { imageUrl = value; isDirty = true; saved = false; return Task.CompletedTask; }
+    private void OpenScanner() => Ui.OpenScanner(ApplyBarcodeScanAsync, "barcode");
+    private Task ApplyBarcodeScanAsync(string value) { barcode = value; SetDirty(); Ui.ShowToast("Barcode captured", value, "success"); return Task.CompletedTask; }
+    private void OnBarcodeInput(ChangeEventArgs e) { barcode = e.Value?.ToString() ?? ""; SetDirty(); }
+    private void SetDirty() { isDirty = true; saved = false; }
+    private Task SetCategory(string value) { category = value; SetDirty(); return Task.CompletedTask; }
+    private Task SetBrand(string value) { brand = value; SetDirty(); return Task.CompletedTask; }
+    private Task SetBaseUnit(string value) { baseUnit = value; SetDirty(); return Task.CompletedTask; }
+    private Task SetPrimaryBranch(string value) { primaryBranch = value; SetDirty(); return Task.CompletedTask; }
+    private Task SetSupplier(string value) { supplier = value; SetDirty(); return Task.CompletedTask; }
+    private Task SetPreferredStock(decimal value) { preferredStock = value; SetDirty(); return Task.CompletedTask; }
+    private Task SetRestockQuantity(decimal value) { restockQuantity = value; SetDirty(); return Task.CompletedTask; }
+    private Task SetLeadTime(decimal value) { leadTime = value; SetDirty(); return Task.CompletedTask; }
+
+    private async Task SaveAsync()
+    {
+        if (isSaving) return;
+        isSaving = true;
+        var updated = await Data.UpdateProductAsync(Id, new ProductDraft(
+            productName, sku, category, primaryBranch, averageCost, sellingPrice, imageUrl));
+        await Task.Delay(350);
+        isSaving = false;
+        if (updated is null)
+        {
+            Ui.ShowToast("Product not found", "The mock record may have been removed.", "danger");
+            return;
+        }
+        isDirty = false;
+        saved = true;
+        Ui.ShowToast("Changes saved", $"{updated.Name} · {updated.Sku}", "success");
+        await Task.Delay(1600);
+        saved = false;
+    }
+}

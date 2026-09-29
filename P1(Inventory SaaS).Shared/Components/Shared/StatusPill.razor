@@ -1,0 +1,8 @@
+<span class="status-pill @CssClass">@Text</span>
+
+@code {
+    [Parameter] public string Text { get; set; } = "";
+    [Parameter] public string Tone { get; set; } = "neutral";
+
+    private string CssClass => $"status-{Tone.ToLowerInvariant()}";
+}

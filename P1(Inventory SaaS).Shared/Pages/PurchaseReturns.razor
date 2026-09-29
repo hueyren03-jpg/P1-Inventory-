@@ -1,0 +1,20 @@
+@page "/purchase-returns"
+
+<PageTitle>Purchase Returns - P1 Inventory</PageTitle>
+<PageHeader Title="Purchase Returns" Subtitle="Return rejected or excess inventory to suppliers.">
+    <Actions><a class="btn btn-primary" href="#"><AppIcon Name="plus" Size="15" /> New purchase return</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search purchase returns" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="6" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Return", "Supplier", "Warehouse", "Lines", "Qty", "Value", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["PR-000381", "TechSource Distribution", "KL Central", "1", "3", "RM 435", "Approved"],
+        ["PR-000380", "PackPro Supplies", "Johor", "2", "18", "RM 92", "Completed"]
+    ];
+}

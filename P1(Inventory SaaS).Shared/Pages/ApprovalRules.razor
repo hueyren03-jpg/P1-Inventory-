@@ -1,0 +1,20 @@
+@page "/automation/approval-rules"
+
+<PageTitle>Approval Rules - P1 Inventory</PageTitle>
+<PageHeader Title="Approval Rules" Subtitle="Define approval thresholds by document and role.">
+    <Actions><a class="btn btn-primary" href="#"><AppIcon Name="plus" Size="15" /> New approval rule</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search approval rules" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="5" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Rule", "Document", "Condition", "Approver", "Escalation", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["PO > RM 50k", "Purchase Order", "Total > RM 50,000", "Owner", "24 hours", "Active"],
+        ["Large adjustment", "Stock Adjustment", "Value impact > RM 2,000", "Inventory Manager", "8 hours", "Active"]
+    ];
+}

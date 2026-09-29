@@ -1,0 +1,78 @@
+@page "/stock-in/new"
+@inject UiShellService Ui
+@inject IInventoryUiService Data
+
+<PageTitle>New Stock In - P1 Inventory</PageTitle>
+<div class="breadcrumb"><a href="javascript:history.back()">Back</a><span>/</span><span>New Stock In</span></div>
+<PageHeader Title="New Stock In" Subtitle="Receive stock with a scan-first, touch-first workflow." />
+
+<section class="panel form-page pos-form-page touch-workflow-page">
+    <div class="touch-workflow-steps">
+        <span class="active">1 Branch</span><span>2 Product</span><span>3 Quantity</span><span>4 Confirm</span>
+    </div>
+
+    <FormSection Title="Receipt setup" Description="Large touch selectors reduce typing and keep the receiving flow fast.">
+        <div class="touch-form-grid">
+            <TouchSelectField Label="Branch" @bind-Value="branch" Options="branches" />
+            <TouchDateField Label="Reference date" @bind-Value="referenceDate" />
+            <TouchSelectField Label="Reason" @bind-Value="reason" Options="reasons" />
+            <label class="touch-text-field"><span class="touch-field-label">External reference</span><input type="text" placeholder="PO / invoice / reference" /></label>
+        </div>
+    </FormSection>
+
+    <FormSection Title="Stock line" Description="Choose or scan a product, then tap quantity or cost to open the appropriate keypad.">
+        <div class="touch-form-grid">
+            <div class="span-2"><TouchProductPicker @bind-Value="product" /></div>
+            <TouchSelectField Label="Storage area" @bind-Value="storageArea" Options="storageAreas" />
+            <TouchNumericField Label="Unit cost" @bind-Value="unitCost" Prefix="RM " Decimals="2" Min="0" HelperText="Tap to calculate unit cost" CalculatorContext="Enter the supplier unit cost. You can use +, −, × or ÷ before applying the amount." />
+            <div class="span-2 touch-field-block">
+                <span class="touch-field-label">Quantity</span>
+                <TouchQuantityControl @bind-Value="quantity" Presets="stockInPresets" Label="Stock in quantity" ContextText="Enter the received quantity or calculate carton × units." />
+            </div>
+        </div>
+
+        <div class="touch-transaction-summary">
+            <div><span>Product</span><strong>@product</strong></div>
+            <div><span>Receiving branch</span><strong>@branch</strong></div>
+            <div><span>Quantity</span><strong>@quantity.ToString("N0")</strong></div>
+            <div><span>Line value</span><strong>RM @LineValue.ToString("N2")</strong></div>
+        </div>
+    </FormSection>
+
+    <FormSection Title="Notes" Description="Optional notes only — the common transaction can be completed without typing.">
+        <div class="form-grid"><label class="span-2"><span>Notes</span><textarea rows="3" placeholder="Optional receiving notes"></textarea></label></div>
+    </FormSection>
+
+    <div class="form-actions pos-form-actions">
+        <a class="btn btn-secondary" href="/stock-in">Cancel</a>
+        <button class="btn btn-primary pos-primary-action" type="button" disabled="@(quantity <= 0)" @onclick="ConfirmAsync">Confirm Stock In · @quantity units</button>
+    </div>
+</section>
+
+@code {
+    private string branch = "Kuala Lumpur";
+    private string reason = "Manual receipt";
+    private string product = "USB-C Hub 8-in-1";
+    private string storageArea = "Main Floor A-01-02";
+    private DateTime referenceDate = DateTime.Today;
+    private decimal unitCost = 68.50m;
+    private int quantity = 240;
+
+    private readonly IReadOnlyList<string> branches = ["Kuala Lumpur", "Petaling Jaya", "Penang", "Johor Bahru"];
+    private readonly IReadOnlyList<string> reasons = ["Manual receipt", "Supplier delivery", "Return received", "Opening stock", "Other receipt"];
+    private readonly IReadOnlyList<string> storageAreas = ["Main Floor A-01-02", "Receiving Area", "Back Room"];
+    private readonly IReadOnlyList<int> stockInPresets = [1, 5, 10, 50, 100];
+
+    private decimal LineValue => unitCost * quantity;
+
+    private async Task ConfirmAsync()
+    {
+        if (quantity <= 0) return;
+        var confirmed = await Ui.ConfirmAsync("Post stock receipt?", $"Receive {quantity:N0} units of {product} into {branch}. Line value RM {LineValue:N2}.", "Post stock in", "info");
+        if (!confirmed) return;
+
+        var movement = await Data.PostStockTransactionAsync(new StockTransactionDraft(
+            "Stock In", product, "", branch, storageArea, quantity, unitCost));
+        Ui.CompleteTouchAction("Stock received", $"{movement.Reference} · {quantity:N0} units of {product} received into {branch}.", "Receive another", () => Ui.ShowToast("Ready for next item", "Branch and reason have been kept for fast repeat entry.", "info"));
+    }
+}

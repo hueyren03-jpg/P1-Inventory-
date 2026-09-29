@@ -1,0 +1,22 @@
+@page "/billing/usage"
+
+<PageTitle>Usage - P1 Inventory</PageTitle>
+<PageHeader Title="Usage" Subtitle="Track billable and operational limits.">
+    <Actions></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search usage" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="-1" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Resource", "Current", "Limit", "Utilization", "Reset / period"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["Users", "12", "20", "60%", "Current"],
+        ["Warehouses", "4", "5", "80%", "Current"],
+        ["SKUs", "8,642", "100,000", "9%", "Current"],
+        ["API requests", "182,420", "1,000,000", "18%", "Sep 2026"]
+    ];
+}

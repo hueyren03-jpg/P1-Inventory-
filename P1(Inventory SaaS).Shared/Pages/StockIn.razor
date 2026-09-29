@@ -1,0 +1,21 @@
+@page "/stock-in"
+
+<PageTitle>Stock In - P1 Inventory</PageTitle>
+<PageHeader Title="Stock In" Subtitle="Receive inventory outside the purchase-order workflow.">
+    <Actions><a class="btn btn-primary" href="/stock-in/new"><AppIcon Name="plus" Size="15" /> New stock in</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search stock in" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="7" LinkColumn="0" LinkBase="/stock-in" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Reference", "Warehouse", "Reason", "Lines", "Qty", "Posted by", "Date", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["SIN-001842", "KL Central", "Opening / manual receipt", "4", "240", "Sarah Lim", "14 Sep", "Posted"],
+        ["SIN-001841", "Penang", "Customer return", "2", "36", "Lee Wei Jian", "13 Sep", "Posted"],
+        ["SIN-001840", "Johor", "Other receipt", "1", "80", "Marcus Lee", "13 Sep", "Approved"]
+    ];
+}

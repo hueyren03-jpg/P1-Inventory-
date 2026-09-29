@@ -1,0 +1,73 @@
+<div class="touch-numeric-field">
+    <span class="touch-field-label">@Label</span>
+    <button type="button" class="touch-numeric-trigger" @onclick="OpenPad">
+        <span class="touch-numeric-value">@FormattedValue</span>
+        <span class="touch-numeric-hint">Tap to open calculator</span>
+    </button>
+
+    @if (!string.IsNullOrWhiteSpace(HelperText))
+    {
+        <small class="touch-field-helper">@HelperText</small>
+    }
+
+    @if (QuickValues.Count > 0)
+    {
+        <div class="touch-quick-values">
+            @foreach (var quick in QuickValues)
+            {
+                <button type="button" @onclick="() => SetQuickAsync(quick)">@QuickLabel(quick)</button>
+            }
+        </div>
+    }
+</div>
+
+<TouchCalculatorPad Open="padOpen"
+                    Title="@Label"
+                    ContextText="@CalculatorContext"
+                    InitialValue="@Value"
+                    Prefix="@Prefix"
+                    Suffix="@Suffix"
+                    Decimals="@Decimals"
+                    AllowNegative="@AllowNegative"
+                    Min="@Min"
+                    Max="@Max"
+                    OnApply="ApplyAsync"
+                    OnCancel="ClosePad" />
+
+@code {
+    [Parameter] public string Label { get; set; } = "Value";
+    [Parameter] public decimal Value { get; set; }
+    [Parameter] public EventCallback<decimal> ValueChanged { get; set; }
+    [Parameter] public string Prefix { get; set; } = "";
+    [Parameter] public string Suffix { get; set; } = "";
+    [Parameter] public int Decimals { get; set; }
+    [Parameter] public bool AllowNegative { get; set; }
+    [Parameter] public decimal Min { get; set; } = 0m;
+    [Parameter] public decimal Max { get; set; } = 999999999m;
+    [Parameter] public string HelperText { get; set; } = "";
+    [Parameter] public string CalculatorContext { get; set; } = "Use the keypad or calculate a value, then tap Done.";
+    [Parameter] public IReadOnlyList<decimal> QuickValues { get; set; } = Array.Empty<decimal>();
+
+    private bool padOpen;
+
+    private string FormattedValue => Prefix + (Decimals > 0 ? Value.ToString($"N{Decimals}") : decimal.Truncate(Value).ToString("N0")) + Suffix;
+
+    private void OpenPad() => padOpen = true;
+    private Task ClosePad() { padOpen = false; return Task.CompletedTask; }
+
+    private async Task ApplyAsync(decimal value)
+    {
+        Value = value;
+        padOpen = false;
+        await ValueChanged.InvokeAsync(value);
+    }
+
+    private async Task SetQuickAsync(decimal value)
+    {
+        Value = Math.Clamp(value, Min, Max);
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    private string QuickLabel(decimal value)
+        => Prefix + (Decimals > 0 ? value.ToString($"N{Decimals}") : decimal.Truncate(value).ToString("N0")) + Suffix;
+}

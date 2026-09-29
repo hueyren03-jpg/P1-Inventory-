@@ -1,0 +1,231 @@
+@if (Open)
+{
+    <div class="touch-sheet-backdrop" @onclick="CancelAsync">
+        <section class="touch-calculator-sheet" role="dialog" aria-modal="true" aria-label="@Title" @onclick:stopPropagation>
+            <div class="touch-sheet-handle"></div>
+            <header class="touch-calculator-head">
+                <div>
+                    <span class="touch-kicker">TOUCH INPUT</span>
+                    <h2>@Title</h2>
+                    @if (!string.IsNullOrWhiteSpace(ContextText))
+                    {
+                        <p>@ContextText</p>
+                    }
+                </div>
+                <button type="button" class="touch-sheet-close" @onclick="CancelAsync" aria-label="Close calculator">×</button>
+            </header>
+
+            <div class="touch-calculator-display">
+                <span>@Prefix</span>
+                <strong>@DisplayValue</strong>
+                @if (!string.IsNullOrWhiteSpace(Suffix))
+                {
+                    <span>@Suffix</span>
+                }
+            </div>
+
+            <div class="touch-calculator-grid">
+                <button type="button" class="utility" @onclick="Clear">C</button>
+                <button type="button" class="utility" disabled="@(!AllowNegative)" @onclick="ToggleSign">±</button>
+                <button type="button" class="utility" @onclick="Backspace">⌫</button>
+                <button type="button" class="operator" @onclick="OperatorDivide">÷</button>
+
+                <button type="button" @onclick="Digit7">7</button>
+                <button type="button" @onclick="Digit8">8</button>
+                <button type="button" @onclick="Digit9">9</button>
+                <button type="button" class="operator" @onclick="OperatorMultiply">×</button>
+
+                <button type="button" @onclick="Digit4">4</button>
+                <button type="button" @onclick="Digit5">5</button>
+                <button type="button" @onclick="Digit6">6</button>
+                <button type="button" class="operator" @onclick="OperatorSubtract">−</button>
+
+                <button type="button" @onclick="Digit1">1</button>
+                <button type="button" @onclick="Digit2">2</button>
+                <button type="button" @onclick="Digit3">3</button>
+                <button type="button" class="operator" @onclick="OperatorAdd">+</button>
+
+                <button type="button" class="wide" @onclick="Digit0">0</button>
+                <button type="button" disabled="@(Decimals == 0)" @onclick="AddDecimal">.</button>
+                <button type="button" class="equals" @onclick="Equals">=</button>
+            </div>
+
+            <div class="touch-calculator-actions">
+                <button type="button" class="btn btn-secondary" @onclick="CancelAsync">Cancel</button>
+                <button type="button" class="btn btn-primary" @onclick="ApplyAsync">Use @Prefix@DisplayValue@Suffix</button>
+            </div>
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Open { get; set; }
+    [Parameter] public string Title { get; set; } = "Enter value";
+    [Parameter] public string ContextText { get; set; } = "";
+    [Parameter] public decimal InitialValue { get; set; }
+    [Parameter] public string Prefix { get; set; } = "";
+    [Parameter] public string Suffix { get; set; } = "";
+    [Parameter] public int Decimals { get; set; }
+    [Parameter] public bool AllowNegative { get; set; }
+    [Parameter] public decimal Min { get; set; } = -999999999m;
+    [Parameter] public decimal Max { get; set; } = 999999999m;
+    [Parameter] public EventCallback<decimal> OnApply { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private string entry = "0";
+    private decimal? accumulator;
+    private string? pendingOperator;
+    private bool replaceEntry;
+    private bool wasOpen;
+
+    protected override void OnParametersSet()
+    {
+        if (Open && !wasOpen)
+            ResetFromInitial();
+        wasOpen = Open;
+    }
+
+    private string DisplayValue
+    {
+        get
+        {
+            var value = ParseEntry();
+            return Decimals > 0
+                ? value.ToString($"N{Decimals}")
+                : decimal.Truncate(value).ToString("N0");
+        }
+    }
+
+    private void ResetFromInitial()
+    {
+        entry = Decimals > 0
+            ? InitialValue.ToString($"F{Decimals}", System.Globalization.CultureInfo.InvariantCulture)
+            : decimal.Truncate(InitialValue).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        accumulator = null;
+        pendingOperator = null;
+        replaceEntry = true;
+    }
+
+    private void Digit0() => Digit("0");
+    private void Digit1() => Digit("1");
+    private void Digit2() => Digit("2");
+    private void Digit3() => Digit("3");
+    private void Digit4() => Digit("4");
+    private void Digit5() => Digit("5");
+    private void Digit6() => Digit("6");
+    private void Digit7() => Digit("7");
+    private void Digit8() => Digit("8");
+    private void Digit9() => Digit("9");
+    private void OperatorAdd() => SetOperator("+");
+    private void OperatorSubtract() => SetOperator("−");
+    private void OperatorMultiply() => SetOperator("×");
+    private void OperatorDivide() => SetOperator("÷");
+
+    private void Digit(string digit)
+    {
+        if (replaceEntry || entry == "0")
+        {
+            entry = digit;
+            replaceEntry = false;
+            return;
+        }
+
+        if (entry.Length < 14)
+            entry += digit;
+    }
+
+    private void AddDecimal()
+    {
+        if (Decimals == 0)
+            return;
+        if (replaceEntry)
+        {
+            entry = "0.";
+            replaceEntry = false;
+            return;
+        }
+        if (!entry.Contains('.'))
+            entry += ".";
+    }
+
+    private void Clear()
+    {
+        entry = "0";
+        accumulator = null;
+        pendingOperator = null;
+        replaceEntry = false;
+    }
+
+    private void Backspace()
+    {
+        if (replaceEntry)
+            return;
+        entry = entry.Length <= 1 || (entry.Length == 2 && entry.StartsWith('-')) ? "0" : entry[..^1];
+    }
+
+    private void ToggleSign()
+    {
+        if (!AllowNegative)
+            return;
+        entry = entry.StartsWith('-') ? entry[1..] : "-" + entry;
+    }
+
+    private void SetOperator(string op)
+    {
+        if (pendingOperator is not null && accumulator is not null && !replaceEntry)
+            CalculatePending();
+        else
+            accumulator = ParseEntry();
+
+        pendingOperator = op;
+        replaceEntry = true;
+    }
+
+    private void Equals()
+    {
+        if (pendingOperator is null || accumulator is null)
+            return;
+        CalculatePending();
+        pendingOperator = null;
+        accumulator = null;
+        replaceEntry = true;
+    }
+
+    private void CalculatePending()
+    {
+        if (pendingOperator is null || accumulator is null)
+            return;
+
+        var right = ParseEntry();
+        var result = pendingOperator switch
+        {
+            "+" => accumulator.Value + right,
+            "−" => accumulator.Value - right,
+            "×" => accumulator.Value * right,
+            "÷" when right != 0 => accumulator.Value / right,
+            _ => accumulator.Value
+        };
+
+        result = Math.Clamp(result, Min, Max);
+        entry = Decimals > 0
+            ? Math.Round(result, Decimals).ToString($"F{Decimals}", System.Globalization.CultureInfo.InvariantCulture)
+            : decimal.Truncate(result).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        accumulator = result;
+        replaceEntry = true;
+    }
+
+    private decimal ParseEntry()
+        => decimal.TryParse(entry, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var value)
+            ? value
+            : 0m;
+
+    private async Task ApplyAsync()
+    {
+        if (pendingOperator is not null)
+            Equals();
+        var value = Math.Clamp(ParseEntry(), Min, Max);
+        await OnApply.InvokeAsync(value);
+    }
+
+    private Task CancelAsync() => OnCancel.InvokeAsync();
+}

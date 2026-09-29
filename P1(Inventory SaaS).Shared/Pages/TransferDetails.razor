@@ -1,0 +1,29 @@
+@page "/transfers/{Id}"
+@inject IInventoryUiService Data
+@inject UiShellService Ui
+<PageTitle>Transfer - P1 Inventory</PageTitle>
+<div class="breadcrumb"><a href="/transfers">Transfers</a><span>/</span><span>@Id</span></div>
+<PageHeader Title="@transfer.Number" Subtitle="@($"{transfer.From} → {transfer.To} · Created {transfer.Created:dd MMM yyyy}")"><Actions><StatusPill Text="@transfer.Status" Tone="@Tone(transfer.Status)" /><button class="btn btn-secondary" @onclick="Print">Print</button><button class="btn btn-primary" disabled="@(transfer.Status is "Received" or "Completed")" @onclick="Receive">Receive stock</button></Actions></PageHeader>
+<section class="panel workflow-panel"><WorkflowSteps Steps="steps" CurrentIndex="@CurrentStep" /></section>
+<section class="detail-layout"><article class="panel"><div class="panel-header"><div><h2>Transfer items</h2><p>@transfer.Items line · @transfer.Quantity units</p></div></div><SimpleTable Headers="headers" Rows="rows" /></article><aside class="panel side-summary"><h2>Transfer summary</h2><dl class="detail-list"><div><dt>From</dt><dd>@transfer.From</dd></div><div><dt>To</dt><dd>@transfer.To</dd></div><div><dt>Created</dt><dd>@transfer.Created.ToString("dd MMM yyyy")</dd></div><div><dt>Expected</dt><dd>@transfer.Expected.ToString("dd MMM yyyy")</dd></div><div><dt>Created by</dt><dd>Daniel Tan</dd></div></dl></aside></section>
+@code {
+    [Parameter] public string Id { get; set; } = "";
+    private readonly IReadOnlyList<string> steps=["Draft","Approved","Picking","Dispatched","In Transit","Received","Completed"];
+    private readonly IReadOnlyList<string> headers=["Product","SKU","Source","Requested","Dispatched","Received"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows=[["Running Tee / Black / M","TEE-BLK-M","APP-02-08","80","80","0"]];
+    private TransferRow transfer = new("TR-001294", "KL Central", "PJ Warehouse", 1, 80, DateOnly.FromDateTime(DateTime.Today), DateOnly.FromDateTime(DateTime.Today.AddDays(1)), "In Transit");
+    private int CurrentStep => Math.Max(0, steps.ToList().FindIndex(x => x == transfer.Status));
+
+    protected override async Task OnParametersSetAsync()
+        => transfer = (await Data.GetTransfersAsync()).FirstOrDefault(x => x.Number.Equals(Id, StringComparison.OrdinalIgnoreCase)) ?? transfer;
+
+    private void Print() => Ui.ShowToast("Transfer print ready", $"{transfer.Number} was prepared for printing.", "success");
+    private async Task Receive()
+    {
+        if (!await Ui.ConfirmAsync("Receive transfer?", $"Receive {transfer.Quantity:N0} units at {transfer.To}.", "Receive stock", "info")) return;
+        await Data.SetTransferStatusAsync(transfer.Number, "Received");
+        transfer = transfer with { Status = "Received" };
+        Ui.ShowToast("Transfer received", transfer.Number, "success");
+    }
+    private static string Tone(string status) => status is "Received" or "Completed" ? "success" : status == "In Transit" ? "info" : "warning";
+}

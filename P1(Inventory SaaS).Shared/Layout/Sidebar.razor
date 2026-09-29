@@ -1,0 +1,83 @@
+@using Microsoft.AspNetCore.Components.Routing
+
+<aside class="sidebar @(Expanded ? "open" : "")">
+    <div class="brand-row">
+        <div class="brand-mark">P1</div>
+        <div class="brand-copy"><strong>P1 Inventory</strong><span>Inventory SaaS</span></div>
+    </div>
+
+    <div class="tenant-summary" aria-label="Current company">
+        <span class="tenant-summary-mark">AR</span>
+        <span><strong>Apex Retail Sdn Bhd</strong><small>Inventory workspace</small></span>
+    </div>
+
+    <nav class="side-nav">
+        <NavSection Title="Overview">
+            <NavItem Href="/" Text="Dashboard" Icon="grid" Match="NavLinkMatch.All" />
+            <NavItem Href="/activity" Text="Activity" Icon="activity" />
+        </NavSection>
+
+        <NavSection Title="Catalog">
+            <NavItem Href="/products" Text="Products" Icon="box" />
+            <NavItem Href="/categories" Text="Categories" Icon="tag" />
+            <NavItem Href="/brands" Text="Brands" Icon="tag" />
+            <NavItem Href="/uom" Text="Units of Measure" Icon="box" />
+            <NavItem Href="/price-lists" Text="Price Lists" Icon="document" />
+        </NavSection>
+
+        <NavSection Title="Inventory">
+            <NavItem Href="/inventory" Text="Overview" Icon="layers" />
+            <NavItem Href="/inventory/balance" Text="Stock Balance" Icon="layers" />
+            <NavItem Href="/stock-movements" Text="Movements" Icon="swap" />
+            <NavItem Href="/stock-in" Text="Stock In" Icon="arrow-down" />
+            <NavItem Href="/stock-out" Text="Stock Out" Icon="arrow-up" />
+            <NavItem Href="/adjustments" Text="Adjustments" Icon="swap" />
+            <NavItem Href="/transfers" Text="Transfers" Icon="truck" />
+            <NavItem Href="/stock-counts" Text="Stock Counts" Icon="check" />
+            <NavItem Href="/inventory/expiring" Text="Expiring Stock" Icon="activity" />
+        </NavSection>
+
+        <NavSection Title="Purchasing">
+            <NavItem Href="/purchase-orders" Text="Purchase Orders" Icon="document" />
+            <NavItem Href="/grn" Text="Goods Receipts" Icon="arrow-down" />
+            <NavItem Href="/purchase-returns" Text="Purchase Returns" Icon="arrow-up" />
+            <NavItem Href="/purchase-approvals" Text="Approvals" Icon="check" />
+        </NavSection>
+
+        <NavSection Title="Sales">
+            <NavItem Href="/sales-orders" Text="Sales Orders" Icon="document" />
+            <NavItem Href="/shipments" Text="Shipments" Icon="truck" />
+            <NavItem Href="/sales-returns" Text="Returns" Icon="swap" />
+        </NavSection>
+
+        <NavSection Title="Partners">
+            <NavItem Href="/suppliers" Text="Suppliers" Icon="users" />
+            <NavItem Href="/customers" Text="Customers" Icon="users" />
+        </NavSection>
+
+        <NavSection Title="Insights">
+            <NavItem Href="/reports" Text="Reports" Icon="chart" />
+        </NavSection>
+
+        <NavSection Title="Automation">
+            <NavItem Href="/automation/alerts" Text="Alerts" Icon="bell" />
+        </NavSection>
+
+        <NavSection Title="Organization">
+            <NavItem Href="/branches" Text="Branch Setup" Icon="grid" />
+            <NavItem Href="/users" Text="Users" Icon="users" />
+            <NavItem Href="/roles" Text="Roles & Permissions" Icon="settings" />
+            <NavItem Href="/audit" Text="Audit Log" Icon="document" />
+        </NavSection>
+    </nav>
+
+    <div class="sidebar-footer">
+        <NavItem Href="/settings" Text="Settings" Icon="settings" />
+        <NavItem Href="/help" Text="Help & Support" Icon="help" />
+    </div>
+</aside>
+
+@code {
+    [Parameter] public bool Expanded { get; set; }
+    [Parameter] public EventCallback OnToggle { get; set; }
+}

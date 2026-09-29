@@ -1,0 +1,20 @@
+@page "/supplier-quotations"
+
+<PageTitle>Supplier Quotations - P1 Inventory</PageTitle>
+<PageHeader Title="Supplier Quotations" Subtitle="Compare supplier offers before creating purchase orders.">
+    <Actions><a class="btn btn-primary" href="#"><AppIcon Name="plus" Size="15" /> New RFQ</a></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search supplier quotations" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="5" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["RFQ", "Products", "Suppliers", "Best total", "Valid until", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["RFQ-00142", "8", "3", "RM 48,120", "20 Sep", "Open"],
+        ["RFQ-00141", "4", "4", "RM 12,680", "18 Sep", "Pending"]
+    ];
+}

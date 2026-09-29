@@ -1,0 +1,83 @@
+<svg class="app-icon" width="@Size" height="@Size" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    @switch (Name)
+    {
+        case "grid":
+            <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />
+            break;
+        case "activity":
+            <path d="M3 12h4l2-6 4 12 2-6h6" />
+            break;
+        case "box":
+            <path d="M21 8l-9 5-9-5 9-5 9 5zM3 8v8l9 5 9-5V8M12 13v8" />
+            break;
+        case "tag":
+            <path d="M20 13l-7 7-9-9V4h7l9 9zM8 8h.01" />
+            break;
+        case "layers":
+            <path d="M12 2l9 5-9 5-9-5 9-5zM3 12l9 5 9-5M3 17l9 5 9-5" />
+            break;
+        case "swap":
+            <path d="M7 7h12l-3-3M17 17H5l3 3" />
+            break;
+        case "arrows":
+            <path d="M7 3v14M3 13l4 4 4-4M17 21V7M13 11l4-4 4 4" />
+            break;
+        case "truck":
+            <path d="M3 6h11v10H3zM14 10h4l3 3v3h-7zM7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+            break;
+        case "check":
+            <path d="M4 5h16v15H4zM8 3v4M16 3v4M8 13l2.5 2.5L16 10" />
+            break;
+        case "document":
+            <path d="M6 2h8l4 4v16H6zM14 2v5h5M9 12h6M9 16h6" />
+            break;
+        case "users":
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+            break;
+        case "chart":
+            <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+            break;
+        case "settings":
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88L4.2 6.66l2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.12.36.33.68.6.94.27.26.65.4 1.03.4H21v4h-.1a1.7 1.7 0 0 0-1.5.66z" />
+            break;
+        case "help":
+            <circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.7 2.7 0 1 1 4.6 1.9c-1.1 1-2.1 1.5-2.1 3M12 18h.01" />
+            break;
+        case "menu":
+            <path d="M4 7h16M4 12h16M4 17h16" />
+            break;
+        case "search":
+            <circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" />
+            break;
+        case "scan":
+            <path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M7 12h10M8 9v6M11 9v6M14 9v6M17 10v4" />
+            break;
+        case "plus":
+            <path d="M12 5v14M5 12h14" />
+            break;
+        case "bell":
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7M13.7 20a2 2 0 0 1-3.4 0" />
+            break;
+        case "arrow-up":
+            <path d="M12 19V5M6 11l6-6 6 6" />
+            break;
+        case "arrow-down":
+            <path d="M12 5v14M18 13l-6 6-6-6" />
+            break;
+        case "filter":
+            <path d="M4 6h16M7 12h10M10 18h4" />
+            break;
+        case "download":
+            <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
+            break;
+        default:
+            <circle cx="12" cy="12" r="2" />
+            break;
+    }
+</svg>
+
+@code {
+    [Parameter] public string Name { get; set; } = "dot";
+    [Parameter] public int Size { get; set; } = 18;
+}

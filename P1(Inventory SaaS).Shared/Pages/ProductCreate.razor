@@ -1,0 +1,128 @@
+@page "/products/new"
+@inject UiShellService Ui
+@inject IInventoryUiService Data
+@inject NavigationManager Navigation
+
+<PageTitle>Create product - P1 Inventory</PageTitle>
+
+<div class="breadcrumb"><a href="javascript:history.back()">Back</a><span>/</span><span>Create product</span></div>
+<PageHeader Title="Create product" Subtitle="Add a product with touch-friendly selectors, scanner access and calculator-backed values." />
+
+<section class="panel form-page pos-form-page touch-workflow-page">
+    <FormSection Title="Product media" Description="Add a clear product image for quick visual recognition at the POS.">
+        <ProductImageUpload ImageChanged="OnImageChanged" />
+    </FormSection>
+
+    <FormSection Title="Basic information" Description="Use large searchable selectors and scan the barcode instead of typing when possible.">
+        <div class="touch-form-grid">
+            <label class="touch-text-field"><span class="touch-field-label">Product name</span><input type="text" value="@productName" @oninput="OnNameInput" placeholder="Product name" /></label>
+            <label class="touch-text-field"><span class="touch-field-label">SKU</span><input type="text" value="@sku" @oninput="OnSkuInput" placeholder="SKU / item code" /></label>
+            <TouchSelectField Label="Category" Value="@category" ValueChanged="SetCategory" Options="categories" />
+            <TouchSelectField Label="Brand" Value="@brand" ValueChanged="SetBrand" Options="brands" />
+            <div class="touch-barcode-field span-2">
+                <span class="touch-field-label">Barcode</span>
+                <div><input type="text" value="@barcode" @oninput="OnBarcodeInput" placeholder="Scan or type barcode" /><button type="button" class="btn btn-primary" @onclick="OpenScanner"><AppIcon Name="scan" Size="20" /> Scan</button></div>
+            </div>
+            <TouchSelectField Label="Base unit" Value="@baseUnit" ValueChanged="SetBaseUnit" Options="baseUnits" Searchable="false" />
+        </div>
+    </FormSection>
+
+    <FormSection Title="Pricing" Description="Tap cost or selling price to open the large calculator keypad.">
+        <div class="touch-form-grid">
+            <TouchNumericField Label="Average cost" Value="@averageCost" ValueChanged="SetAverageCost" Prefix="RM " Decimals="2" Min="0" CalculatorContext="Enter or calculate the average unit cost." />
+            <TouchNumericField Label="Selling price" Value="@sellingPrice" ValueChanged="SetSellingPrice" Prefix="RM " Decimals="2" Min="0" CalculatorContext="Enter or calculate the selling price." />
+            <TouchSelectField Label="Tax class" Value="@taxClass" ValueChanged="SetTaxClass" Options="taxClasses" Searchable="false" />
+            <TouchSelectField Label="Price list" Value="@priceList" ValueChanged="SetPriceList" Options="priceLists" />
+        </div>
+
+        <div class="touch-margin-preview">
+            <div><span>Cost</span><strong>RM @averageCost.ToString("N2")</strong></div>
+            <div><span>Selling</span><strong>RM @sellingPrice.ToString("N2")</strong></div>
+            <div><span>Gross margin</span><strong>@MarginPercent.ToString("N1")%</strong></div>
+        </div>
+    </FormSection>
+
+    <FormSection Title="Inventory settings" Description="Stock planning fields use the same calculator and large branch selector as the transaction screens.">
+        <div class="touch-form-grid">
+            <TouchSelectField Label="Primary branch" Value="@primaryBranch" ValueChanged="SetPrimaryBranch" Options="branches" />
+            <TouchNumericField Label="Preferred stock level" Value="@preferredStock" ValueChanged="SetPreferredStock" Decimals="0" Min="0" Suffix=" units" QuickValues="stockQuickValues" />
+            <TouchNumericField Label="Restock quantity" Value="@restockQuantity" ValueChanged="SetRestockQuantity" Decimals="0" Min="0" Suffix=" units" QuickValues="restockQuickValues" />
+            <TouchSelectField Label="Tracking" Value="@tracking" ValueChanged="SetTracking" Options="trackingOptions" Searchable="false" />
+            <label class="toggle-field touch-toggle-card"><span><strong>Allow negative stock</strong><small>Keep disabled for normal inventory control</small></span><input type="checkbox" @onchange="MarkDirty" /></label>
+        </div>
+    </FormSection>
+
+    <div class="form-actions pos-form-actions">
+        <span class="save-state @(isDirty ? "dirty" : "")">@(isSaving ? "Saving…" : isDirty ? "Unsaved changes" : "Ready")</span>
+        <a class="btn btn-secondary" href="/products">Cancel</a>
+        <button class="btn btn-primary pos-primary-action @(isSaving ? "is-loading" : "")" disabled="@(isSaving || !CanCreate)" @onclick="CreateProductAsync">
+            @if (isSaving) { <span class="btn-spinner"></span> }
+            @(isSaving ? "Creating…" : "Create product")
+        </button>
+    </div>
+</section>
+
+@code {
+    private bool isDirty;
+    private bool isSaving;
+    private string productName = "";
+    private string sku = "";
+    private string? imageUrl;
+    private string category = "Electronics";
+    private string brand = "DockPro";
+    private string barcode = "";
+    private string baseUnit = "Unit";
+    private string taxClass = "SST 8%";
+    private string priceList = "Retail MYR";
+    private string primaryBranch = "Kuala Lumpur";
+    private string tracking = "None";
+    private decimal averageCost;
+    private decimal sellingPrice;
+    private decimal preferredStock;
+    private decimal restockQuantity;
+
+    private readonly IReadOnlyList<string> categories = ["Electronics", "Apparel", "Consumables", "Accessories", "Office"];
+    private readonly IReadOnlyList<string> brands = ["DockPro", "ScanPro", "P1 Basics", "RetailWorks"];
+    private readonly IReadOnlyList<string> baseUnits = ["Unit", "Box", "Pack", "Roll", "Pair"];
+    private readonly IReadOnlyList<string> taxClasses = ["SST 8%", "SST 6%", "Zero rated"];
+    private readonly IReadOnlyList<string> priceLists = ["Retail MYR", "Wholesale MYR", "Member MYR"];
+    private readonly IReadOnlyList<string> branches = ["Kuala Lumpur", "Petaling Jaya", "Penang", "Johor Bahru"];
+    private readonly IReadOnlyList<string> trackingOptions = ["None", "Batch", "Serial"];
+    private readonly IReadOnlyList<decimal> stockQuickValues = [10, 20, 50, 100];
+    private readonly IReadOnlyList<decimal> restockQuickValues = [10, 50, 100, 300, 500];
+
+    private decimal MarginPercent => sellingPrice <= 0 ? 0 : ((sellingPrice - averageCost) / sellingPrice) * 100m;
+    private bool CanCreate => !string.IsNullOrWhiteSpace(productName) && !string.IsNullOrWhiteSpace(sku);
+
+    private void MarkDirty(ChangeEventArgs _) => isDirty = true;
+    private void OnNameInput(ChangeEventArgs e) { productName = e.Value?.ToString() ?? ""; isDirty = true; }
+    private void OnSkuInput(ChangeEventArgs e) { sku = e.Value?.ToString() ?? ""; isDirty = true; }
+    private Task OnImageChanged(string? value) { imageUrl = value; isDirty = true; return Task.CompletedTask; }
+    private void OpenScanner() => Ui.OpenScanner(ApplyBarcodeScanAsync, "barcode");
+    private Task ApplyBarcodeScanAsync(string value) { barcode = value; isDirty = true; Ui.ShowToast("Barcode captured", value, "success"); return Task.CompletedTask; }
+    private void OnBarcodeInput(ChangeEventArgs e) { barcode = e.Value?.ToString() ?? ""; isDirty = true; }
+    private Task SetCategory(string value) { category = value; isDirty = true; return Task.CompletedTask; }
+    private Task SetBrand(string value) { brand = value; isDirty = true; return Task.CompletedTask; }
+    private Task SetBaseUnit(string value) { baseUnit = value; isDirty = true; return Task.CompletedTask; }
+    private Task SetTaxClass(string value) { taxClass = value; isDirty = true; return Task.CompletedTask; }
+    private Task SetPriceList(string value) { priceList = value; isDirty = true; return Task.CompletedTask; }
+    private Task SetPrimaryBranch(string value) { primaryBranch = value; isDirty = true; return Task.CompletedTask; }
+    private Task SetTracking(string value) { tracking = value; isDirty = true; return Task.CompletedTask; }
+    private Task SetAverageCost(decimal value) { averageCost = value; isDirty = true; return Task.CompletedTask; }
+    private Task SetSellingPrice(decimal value) { sellingPrice = value; isDirty = true; return Task.CompletedTask; }
+    private Task SetPreferredStock(decimal value) { preferredStock = value; isDirty = true; return Task.CompletedTask; }
+    private Task SetRestockQuantity(decimal value) { restockQuantity = value; isDirty = true; return Task.CompletedTask; }
+
+    private async Task CreateProductAsync()
+    {
+        if (isSaving || !CanCreate) return;
+        isSaving = true;
+        var created = await Data.CreateProductAsync(new ProductDraft(
+            productName, sku, category, primaryBranch, averageCost, sellingPrice, imageUrl));
+        await Task.Delay(350);
+        isSaving = false;
+        isDirty = false;
+        Ui.ShowToast("Product created", $"{created.Name} · {created.Sku}", "success");
+        Navigation.NavigateTo("/products");
+    }
+}

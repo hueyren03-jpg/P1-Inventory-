@@ -1,0 +1,20 @@
+@page "/purchase-approvals"
+
+<PageTitle>Purchase Approvals - P1 Inventory</PageTitle>
+<PageHeader Title="Purchase Approvals" Subtitle="Review purchase orders waiting for approval.">
+    <Actions><button class="btn btn-secondary">Approval rules</button></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search purchase approvals" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="6" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["PO", "Supplier", "Requested by", "Warehouse", "Total", "Submitted", "Status"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["PO-2026-003818", "Urban Apparel Manufacturing", "Sarah Lim", "PJ Warehouse", "RM 67,490", "14 Sep 9:02 AM", "Pending Approval"],
+        ["PO-2026-003812", "PackPro Supplies", "Marcus Lee", "Johor", "RM 18,420", "13 Sep 3:20 PM", "Pending Approval"]
+    ];
+}

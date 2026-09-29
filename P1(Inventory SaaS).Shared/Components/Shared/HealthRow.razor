@@ -1,0 +1,15 @@
+<div class="health-row">
+    <div class="health-copy">
+        <span class="health-dot @Tone"></span>
+        <span>@Label</span>
+        <strong>@Count</strong>
+    </div>
+    <div class="health-track"><span class="@Tone" style="@($"width:{Percent}%")"></span></div>
+</div>
+
+@code {
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string Count { get; set; } = "";
+    [Parameter] public string Percent { get; set; } = "0";
+    [Parameter] public string Tone { get; set; } = "healthy";
+}

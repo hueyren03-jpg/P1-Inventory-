@@ -1,0 +1,23 @@
+<div class="list-toolbar">
+    <div class="toolbar-search">
+        <AppIcon Name="search" Size="16" />
+        <input placeholder="@SearchPlaceholder" />
+    </div>
+    @if (ShowFilter)
+    {
+        <button class="btn btn-secondary"><AppIcon Name="filter" Size="15" /> Filters</button>
+    }
+    @ChildContent
+    <div class="toolbar-spacer"></div>
+    @if (!string.IsNullOrWhiteSpace(ResultText))
+    {
+        <span class="result-count">@ResultText</span>
+    }
+</div>
+
+@code {
+    [Parameter] public string SearchPlaceholder { get; set; } = "Search";
+    [Parameter] public bool ShowFilter { get; set; } = true;
+    [Parameter] public string ResultText { get; set; } = "";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

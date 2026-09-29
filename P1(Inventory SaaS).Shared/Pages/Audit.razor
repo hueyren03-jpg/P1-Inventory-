@@ -1,0 +1,22 @@
+@page "/audit"
+
+<PageTitle>Audit Log - P1 Inventory</PageTitle>
+<PageHeader Title="Audit Log" Subtitle="Immutable security and business audit events.">
+    <Actions><button class="btn btn-secondary">Export audit log</button></Actions>
+</PageHeader>
+
+<section class="panel list-panel">
+    <Toolbar SearchPlaceholder="Search audit log" ResultText="@($"{rows.Count} records")" />
+    <SimpleTable Headers="headers" Rows="rows" StatusColumn="5" LinkColumn="-1" LinkBase="#" />
+    <div class="pagination"><span>Showing all sample records</span><div><button class="btn btn-secondary compact" disabled>Previous</button><button class="btn btn-secondary compact" disabled>Next</button></div></div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<string> headers = ["Time", "Actor", "Action", "Resource", "IP / Device", "Result"];
+    private readonly IReadOnlyList<IReadOnlyList<string>> rows = [
+        ["14 Sep 10:42", "Sarah Lim", "inventory.stock_in.post", "GRN-004821", "Windows \u00b7 KL", "Completed"],
+        ["14 Sep 10:18", "Daniel Tan", "transfer.dispatch", "TR-001294", "Android \u00b7 PJ", "Completed"],
+        ["14 Sep 9:56", "Huey Ren", "role.update", "Warehouse Staff", "Windows \u00b7 KL", "Completed"],
+        ["14 Sep 8:12", "Unknown", "login.failed", "huey@example.com", "Chrome \u00b7 MY", "Failed"]
+    ];
+}

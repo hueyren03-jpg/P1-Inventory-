@@ -1,0 +1,39 @@
+@page "/scan"
+
+<PageTitle>Scan - P1 Inventory</PageTitle>
+
+<PageHeader Title="Scan product" Subtitle="Barcode-first workflow for warehouse staff." />
+
+<div class="scan-layout">
+    <section class="panel scan-camera">
+        <div class="scan-frame">
+            <div class="scan-corners"></div>
+            <AppIcon Name="box" Size="34" />
+            <strong>Point the camera at a barcode</strong>
+            <span>Camera integration can be wired through a MAUI native service.</span>
+        </div>
+        <button class="btn btn-secondary">Enter barcode manually</button>
+    </section>
+
+    <section class="panel scan-result">
+        <div class="scan-product-title">
+            <div class="product-thumb large">U</div>
+            <div>
+                <h2>USB-C Hub 8-in-1</h2>
+                <p>HUB-8IN1-GR</p>
+            </div>
+            <StatusPill Text="In Stock" Tone="success" />
+        </div>
+        <div class="scan-metrics">
+            <div><span>Available</span><strong>385</strong></div>
+            <div><span>Reserved</span><strong>35</strong></div>
+            <div><span>Incoming</span><strong>240</strong></div>
+        </div>
+        <div class="scan-actions">
+            <button class="btn btn-primary">Stock in</button>
+            <button class="btn btn-secondary">Stock out</button>
+            <button class="btn btn-secondary">Transfer</button>
+            <button class="btn btn-secondary">Adjust</button>
+        </div>
+    </section>
+</div>

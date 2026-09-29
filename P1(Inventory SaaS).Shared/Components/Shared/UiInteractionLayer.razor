@@ -1,0 +1,475 @@
+@implements IDisposable
+@inject UiShellService Ui
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+@if (!Ui.IsOnline)
+{
+    <div class="connection-banner" role="status">
+        <span class="connection-pulse"></span>
+        <div><strong>You are offline</strong><span>Changes that require the server will sync when your connection returns.</span></div>
+    </div>
+}
+
+<div class="toast-region" aria-live="polite" aria-relevant="additions removals">
+    @foreach (var toast in Ui.Toasts)
+    {
+        <article class="app-toast @toast.Tone" @key="toast.Id">
+            <span class="toast-icon">@ToastIcon(toast.Tone)</span>
+            <div class="toast-copy">
+                <strong>@toast.Title</strong>
+                @if (!string.IsNullOrWhiteSpace(toast.Message))
+                {
+                    <span>@toast.Message</span>
+                }
+            </div>
+            @if (!string.IsNullOrWhiteSpace(toast.ActionLabel))
+            {
+                <button type="button" class="toast-action" @onclick="() => RunToastAction(toast)">@toast.ActionLabel</button>
+            }
+            <button type="button" class="toast-close" aria-label="Dismiss notification" @onclick="() => Ui.DismissToast(toast.Id)">×</button>
+            <span class="toast-progress"></span>
+        </article>
+    }
+</div>
+
+@if (confirmRequest is not null)
+{
+    <div class="overlay-shell modal-overlay" @onclick="CancelConfirm">
+        <section class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-title" @onclick:stopPropagation>
+            <div class="confirm-symbol @confirmRequest.Tone"><AppIcon Name="activity" Size="20" /></div>
+            <div class="confirm-copy">
+                <h2 id="confirm-title">@confirmRequest.Title</h2>
+                <p>@confirmRequest.Message</p>
+            </div>
+            <div class="confirm-actions">
+                <button type="button" class="btn btn-secondary" @onclick="CancelConfirm">Cancel</button>
+                <button type="button" class="btn @(confirmRequest.Tone == "danger" ? "btn-danger" : "btn-primary")" @onclick="AcceptConfirm">@confirmRequest.ConfirmText</button>
+            </div>
+        </section>
+    </div>
+}
+
+@if (Ui.Drawer is not null)
+{
+    <div class="overlay-shell drawer-overlay" @onclick="Ui.CloseDrawer">
+        <aside class="detail-drawer" role="dialog" aria-modal="true" aria-label="Quick details" @onclick:stopPropagation>
+            <div class="drawer-header">
+                <div><span class="eyebrow">QUICK VIEW</span><h2>@Ui.Drawer.Title</h2><p>@Ui.Drawer.Subtitle</p></div>
+                <button class="icon-button" type="button" aria-label="Close details" @onclick="Ui.CloseDrawer">×</button>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Ui.Drawer.ImageUrl))
+            {
+                <button type="button" class="drawer-image" @onclick="() => Ui.OpenImage(Ui.Drawer.ImageUrl!, Ui.Drawer.Title)">
+                    <img src="@Ui.Drawer.ImageUrl" alt="@Ui.Drawer.Title" />
+                    <span>View image</span>
+                </button>
+            }
+            <div class="drawer-intelligence">
+                <div><span>Sales trend</span><strong class="positive">↑ 12%</strong></div>
+                <div><span>Stock health</span><strong>Healthy</strong></div>
+                <div><span>Suggested action</span><strong>Review at 20 units</strong></div>
+            </div>
+            <dl class="drawer-fields">
+                @foreach (var field in Ui.Drawer.Fields)
+                {
+                    <div><dt>@field.Label</dt><dd>@field.Value</dd></div>
+                }
+            </dl>
+            <div class="drawer-actions">
+                <a class="btn btn-secondary" href="@Ui.Drawer.SecondaryHref" @onclick="Ui.CloseDrawer">Edit</a>
+                <a class="btn btn-primary" href="@Ui.Drawer.PrimaryHref" @onclick="Ui.CloseDrawer">Open full record</a>
+            </div>
+        </aside>
+    </div>
+}
+
+@if (Ui.ImageViewer is not null)
+{
+    <div class="overlay-shell image-overlay" @onclick="Ui.CloseImage">
+        <section class="image-viewer" role="dialog" aria-modal="true" aria-label="Product image" @onclick:stopPropagation>
+            <div class="image-viewer-top"><strong>@Ui.ImageViewer.Title</strong><button type="button" class="icon-button" @onclick="Ui.CloseImage">×</button></div>
+            <img src="@Ui.ImageViewer.Url" alt="@Ui.ImageViewer.Title" />
+            <span class="image-viewer-caption">Product image preview</span>
+        </section>
+    </div>
+}
+
+@if (Ui.ScannerOpen)
+{
+    <div class="overlay-shell scanner-overlay" @onclick="CloseScanner">
+        <section class="scanner-dialog" role="dialog" aria-modal="true" aria-label="Barcode scanner" @onclick:stopPropagation>
+            <div class="scanner-head">
+                <div><span class="eyebrow">BARCODE / QR</span><h2>@ScannerTitle</h2><p>@ScannerDescription</p></div>
+                <button type="button" class="icon-button" @onclick="CloseScanner">×</button>
+            </div>
+
+            <div class="scanner-viewport @(scanFound ? "found" : "")">
+                <div class="scanner-corner tl"></div><div class="scanner-corner tr"></div><div class="scanner-corner bl"></div><div class="scanner-corner br"></div>
+                <div class="scanner-line"></div>
+                <div class="scanner-camera-placeholder"><span>⌗</span><small>@(scanFound ? "Code detected" : "Camera preview")</small></div>
+            </div>
+
+            @if (scanFound)
+            {
+                <div class="scanner-result">
+                    <span class="scanner-success">✓</span>
+                    <div><strong>@ScanResultTitle</strong><span>@ScanResultDetail</span></div>
+                    <button type="button" class="btn btn-primary compact" @onclick="UseScannedResult">@(Ui.ScannerHasConsumer ? "Use scan" : "Open")</button>
+                </div>
+            }
+            else
+            {
+                <div class="scanner-controls">
+                    <label class="scanner-manual"><span>SKU / barcode</span><input @bind="manualScan" placeholder="Scan or enter a code" /></label>
+                    <button type="button" class="btn btn-primary" @onclick="SimulateScan">Simulate scan</button>
+                </div>
+            }
+
+            <div class="scanner-footer"><span>Keyboard shortcut: <kbd>B</kbd></span><span>Camera/device decoding connects during the device integration phase.</span></div>
+        </section>
+    </div>
+}
+
+@if (Ui.CommandPaletteOpen)
+{
+    <div class="overlay-shell command-overlay" @onclick="CloseCommandPalette">
+        <section class="command-palette" role="dialog" aria-modal="true" aria-label="Command palette" @onclick:stopPropagation>
+            <div class="command-search"><AppIcon Name="search" Size="17" /><input @bind="commandSearch" @bind:event="oninput" placeholder="Search pages and actions…" autofocus /><kbd>Esc</kbd></div>
+            <div class="command-body">
+                @foreach (var group in FilteredCommands.GroupBy(x => x.Group))
+                {
+                    <div class="command-group">
+                        <span>@group.Key</span>
+                        @foreach (var command in group)
+                        {
+                            <button type="button" @onclick="() => ExecuteCommand(command)">
+                                <span class="command-icon"><AppIcon Name="@command.Icon" Size="16" /></span>
+                                <span><strong>@command.Label</strong><small>@command.Description</small></span>
+                                @if (!string.IsNullOrWhiteSpace(command.Shortcut)) { <kbd>@command.Shortcut</kbd> }
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+    </div>
+}
+
+@code {
+    private UiConfirmRequest? confirmRequest;
+    private TaskCompletionSource<bool>? confirmTcs;
+    private string commandSearch = "";
+    private string manualScan = "";
+    private bool scanFound;
+    private string? appliedTheme;
+    private DotNetObjectReference<UiInteractionLayer>? dotNetRef;
+    private IJSObjectReference? module;
+
+    private readonly IReadOnlyList<CommandItem> commands =
+    [
+        new("Navigation", "Dashboard", "Inventory overview and KPIs", "/", "grid", "G D"),
+        new("Navigation", "Products", "Browse and manage products", "/products", "box", "G P"),
+        new("Navigation", "Inventory", "Stock balance and operations", "/inventory", "layers", "G I"),
+        new("Navigation", "Purchase orders", "Purchasing documents", "/purchase-orders", "document", "G O"),
+        new("Navigation", "Reports", "Inventory and operational reports", "/reports", "chart", "G R"),
+        new("Create", "New product", "Create a product or SKU", "/products/new", "plus", "N P"),
+        new("Create", "Stock in", "Receive manual inventory", "/stock-in/new", "arrow-down", "S"),
+        new("Create", "Stock out", "Issue inventory", "/stock-out/new", "arrow-up", "O"),
+        new("Create", "Transfer", "Move stock between branches", "/transfers/new", "truck", "T"),
+        new("Create", "Stock count", "Start a cycle count", "/stock-counts/new", "check", "C"),
+        new("Tools", "Scan barcode", "Open camera-style barcode scanner", "#scan", "scan", "B")
+    ];
+
+    private IEnumerable<CommandItem> FilteredCommands => string.IsNullOrWhiteSpace(commandSearch)
+        ? commands
+        : commands.Where(x => x.Label.Contains(commandSearch, StringComparison.OrdinalIgnoreCase)
+                           || x.Description.Contains(commandSearch, StringComparison.OrdinalIgnoreCase)
+                           || x.Group.Contains(commandSearch, StringComparison.OrdinalIgnoreCase));
+
+    private string ScannerTitle => Ui.ScannerPurpose switch
+    {
+        "barcode" => "Scan product barcode",
+        "product" => "Scan to select product",
+        _ => "Scan inventory"
+    };
+
+    private string ScannerDescription => Ui.ScannerPurpose switch
+    {
+        "barcode" => "Scan the barcode and apply it directly to the current product field.",
+        "product" => "Scan a product code to select that item without leaving the transaction.",
+        _ => "Point the camera at a product barcode or enter a SKU manually."
+    };
+
+    private string ScanResultTitle => Ui.ScannerPurpose == "barcode" ? manualScan : "Wireless Scanner S2";
+    private string ScanResultDetail => Ui.ScannerPurpose == "barcode" ? "Barcode ready to apply" : $"{manualScan} · Electronics · 12 available";
+
+    protected override void OnInitialized()
+    {
+        Ui.Changed += HandleChanged;
+        Ui.SetConfirmationHandler(ShowConfirmAsync);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        dotNetRef = DotNetObjectReference.Create(this);
+        try
+        {
+            module = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/StockPilot.Shared/ui-interactions.js");
+            await module.InvokeVoidAsync("initializeUiInteractions", dotNetRef);
+            var storedTheme = await module.InvokeAsync<string>("getStoredTheme");
+            Ui.SetThemeMode(storedTheme, false);
+            appliedTheme = storedTheme;
+            await module.InvokeVoidAsync("applyTheme", storedTheme);
+        }
+        catch
+        {
+            // Progressive enhancement only; core Blazor UI remains functional without JS.
+        }
+    }
+
+    [JSInvokable]
+    public Task HandleShortcut(string shortcut)
+    {
+        switch (shortcut)
+        {
+            case "command": Ui.SetCommandPalette(true); break;
+            case "escape": Ui.CloseAll(); if (confirmRequest is not null) CancelConfirm(); break;
+            case "new-product": Navigation.NavigateTo("/products/new"); break;
+            case "stock-in": Navigation.NavigateTo("/stock-in/new"); break;
+            case "transfer": Navigation.NavigateTo("/transfers/new"); break;
+            case "scanner": Ui.SetScanner(true); break;
+            case "focus-search": Ui.SetCommandPalette(true); break;
+        }
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public async Task HandleUiAction(string label, string path, string group)
+    {
+        label = label.Trim();
+
+        var route = label switch
+        {
+            "Continue with Microsoft" => "/",
+            "Stock in" => "/stock-in/new",
+            "Stock out" => "/stock-out/new",
+            "Transfer" => "/transfers/new",
+            "Adjust" => "/adjustments/new",
+            "Approval rules" => "/automation/approval-rules",
+            _ => ""
+        };
+        if (!string.IsNullOrWhiteSpace(route))
+        {
+            Navigation.NavigateTo(route);
+            return;
+        }
+
+        if (label == "Enter barcode manually")
+        {
+            Ui.SetScanner(true);
+            return;
+        }
+
+        if (group is "tab" or "filter" or "role" or "settings")
+        {
+            Ui.ShowToast($"{label} selected", "The mock view has been updated for this session.", "info");
+            return;
+        }
+
+        if (label.StartsWith("Export", StringComparison.OrdinalIgnoreCase) ||
+            label.StartsWith("Download", StringComparison.OrdinalIgnoreCase) ||
+            label == "Print")
+        {
+            var slug = path.Trim('/').Replace('/', '-');
+            if (string.IsNullOrWhiteSpace(slug)) slug = "dashboard";
+            var fileName = label == "Print" ? $"{slug}-print.txt" : $"{slug}-export.csv";
+            var content = $"StockPilot mock export\r\nPage,{path}\r\nAction,{label}\r\nGenerated,{DateTimeOffset.Now:O}\r\n";
+            if (module is not null)
+                await module.InvokeVoidAsync("downloadMockFile", fileName, content, "text/csv;charset=utf-8");
+            Ui.ShowToast("Export ready", fileName, "success");
+            return;
+        }
+
+        if (label is "Discard" or "Cancel changes")
+        {
+            if (module is not null)
+                await module.InvokeVoidAsync("restoreCurrentForm", path);
+            Ui.ShowToast("Changes discarded", "The last saved mock values were restored.", "info");
+            return;
+        }
+
+        if (label.StartsWith("Save", StringComparison.OrdinalIgnoreCase) ||
+            label.StartsWith("Update payment", StringComparison.OrdinalIgnoreCase))
+        {
+            if (module is not null)
+                await module.InvokeVoidAsync("saveCurrentForm", path);
+            Ui.CompleteTouchAction("Changes saved", $"{label} was stored in this mock session.");
+            return;
+        }
+
+        if (label == "Mark all read")
+        {
+            if (module is not null)
+                await module.InvokeVoidAsync("markAllTableRows", "Read");
+            Ui.ShowToast("Notifications cleared", "All mock notifications are marked as read.", "success");
+            return;
+        }
+
+        if (label == "Sign out other sessions")
+        {
+            if (!await Ui.ConfirmAsync("Sign out other sessions?", "This keeps the current Windows session active.", "Sign out", "warning")) return;
+            if (module is not null)
+                await module.InvokeVoidAsync("keepOnlyFirstTableRow");
+            Ui.ShowToast("Other sessions signed out", "Only this device remains active.", "success");
+            return;
+        }
+
+        if (label is "Regenerate" or "Change password" or "Manage")
+        {
+            var confirmed = await Ui.ConfirmAsync($"{label}?", "Apply this security action to the mock account.", label, "warning");
+            if (confirmed) Ui.ShowToast("Security updated", $"{label} completed for the mock account.", "success");
+            return;
+        }
+
+        if (label.StartsWith("All ", StringComparison.OrdinalIgnoreCase) ||
+            label == "Filters" || label.StartsWith("Last ", StringComparison.OrdinalIgnoreCase))
+        {
+            Ui.ShowToast("Filter updated", label.Replace("⌄", "").Trim(), "info");
+            return;
+        }
+
+        Ui.ShowToast($"{label} completed", "The change is stored in the current mock session.", "success");
+    }
+
+    [JSInvokable]
+    public Task HandleOnlineState(bool online)
+    {
+        Ui.SetOnline(online);
+        return Task.CompletedTask;
+    }
+
+    private Task<bool> ShowConfirmAsync(UiConfirmRequest request)
+    {
+        confirmRequest = request;
+        confirmTcs = new TaskCompletionSource<bool>();
+        InvokeAsync(StateHasChanged);
+        return confirmTcs.Task;
+    }
+
+    private void AcceptConfirm()
+    {
+        confirmRequest = null;
+        confirmTcs?.TrySetResult(true);
+        confirmTcs = null;
+    }
+
+    private void CancelConfirm()
+    {
+        confirmRequest = null;
+        confirmTcs?.TrySetResult(false);
+        confirmTcs = null;
+    }
+
+    private void RunToastAction(UiToast toast)
+    {
+        toast.Action?.Invoke();
+        Ui.DismissToast(toast.Id);
+    }
+
+    private void ExecuteCommand(CommandItem command)
+    {
+        Ui.SetCommandPalette(false);
+        commandSearch = "";
+        if (command.Href == "#scan")
+        {
+            Ui.SetScanner(true);
+            return;
+        }
+        Navigation.NavigateTo(command.Href);
+    }
+
+    private void CloseCommandPalette()
+    {
+        commandSearch = "";
+        Ui.SetCommandPalette(false);
+    }
+
+    private void CloseScanner()
+    {
+        scanFound = false;
+        manualScan = "";
+        Ui.SetScanner(false);
+    }
+
+    private async Task SimulateScan()
+    {
+        await Task.Delay(350);
+        if (string.IsNullOrWhiteSpace(manualScan))
+            manualScan = Ui.ScannerPurpose == "barcode" ? "9550001211207" : "SCN-S2";
+        scanFound = true;
+        Ui.ShowToast("Code detected", manualScan, "success");
+    }
+
+    private async Task UseScannedResult()
+    {
+        if (Ui.ScannerHasConsumer)
+        {
+            var code = manualScan;
+            scanFound = false;
+            manualScan = "";
+            await Ui.CompleteScanAsync(code);
+            return;
+        }
+
+        OpenScannedProduct();
+    }
+
+    private void OpenScannedProduct()
+    {
+        CloseScanner();
+        Ui.ShowToast("Product opened", "Wireless Scanner S2 · SCN-S2", "info");
+        Navigation.NavigateTo("/products");
+    }
+
+    private void HandleChanged()
+    {
+        _ = InvokeAsync(async () =>
+        {
+            StateHasChanged();
+            if (module is null) return;
+            try
+            {
+                if (appliedTheme != Ui.ThemeMode)
+                {
+                    appliedTheme = Ui.ThemeMode;
+                    await module.InvokeVoidAsync("applyTheme", Ui.ThemeMode);
+                }
+                await module.InvokeVoidAsync("refreshAdvancedUi");
+            }
+            catch { }
+        });
+    }
+
+    private static string ToastIcon(string tone) => tone switch
+    {
+        "success" => "✓",
+        "danger" => "!",
+        "warning" => "!",
+        _ => "i"
+    };
+
+    public async void Dispose()
+    {
+        Ui.Changed -= HandleChanged;
+        Ui.SetConfirmationHandler(null);
+        if (module is not null)
+        {
+            try { await module.InvokeVoidAsync("disposeUiInteractions"); await module.DisposeAsync(); } catch { }
+        }
+        dotNetRef?.Dispose();
+    }
+
+    private sealed record CommandItem(string Group, string Label, string Description, string Href, string Icon, string Shortcut);
+}

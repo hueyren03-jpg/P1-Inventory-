@@ -1,0 +1,14 @@
+<div class="alert-item">
+    <span class="alert-dot @Tone"></span>
+    <div>
+        <strong>@Title</strong>
+        <span>@Detail</span>
+    </div>
+    <span class="alert-arrow">›</span>
+</div>
+
+@code {
+    [Parameter] public string Tone { get; set; } = "info";
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Detail { get; set; } = "";
+}
